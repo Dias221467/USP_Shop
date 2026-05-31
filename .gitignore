@@ -1,0 +1,26 @@
+# Environment variables (личные данные, ключи)
+.env
+.env.local
+.env.production
+
+# Бинарники
+bin/
+*.exe
+
+# Загруженные файлы
+uploads/*
+!uploads/.gitkeep
+
+# Go
+vendor/
+
+# Claude Code
+.claude/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
