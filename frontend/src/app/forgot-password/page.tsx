@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         transition={{ duration: 0.6 }}
         className="w-full max-w-sm"
       >
-        <Link href="/login" className="inline-flex items-center gap-2 text-sm opacity-40 hover:opacity-80 transition-opacity mb-12">
+        <Link href="/login" className="inline-flex items-center gap-2 text-sm  hover:opacity-80 transition-opacity mb-12">
           <ArrowLeft className="w-4 h-4" />
           Назад
         </Link>
@@ -43,11 +43,11 @@ export default function ForgotPasswordPage() {
         {!sent ? (
           <>
             <h1 className="text-2xl font-light mb-2">Забыли пароль?</h1>
-            <p className="text-sm opacity-40 mb-8">Введите email — мы отправим ссылку для сброса.</p>
+            <p className="text-sm  mb-8">Введите email — мы отправим ссылку для сброса.</p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div>
-                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">Email</label>
+                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">Email</label>
                 <input
                   type="email"
                   required
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
                 type="submit"
                 disabled={loading}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
+                className="w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-70"
               >
                 {loading ? 'Отправляем...' : 'Отправить ссылку'}
               </motion.button>
@@ -74,10 +74,10 @@ export default function ForgotPasswordPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8">
             <Mail className="w-14 h-14 mx-auto mb-6 opacity-20" />
             <h1 className="text-2xl font-light mb-3">Письмо отправлено</h1>
-            <p className="text-sm opacity-50 leading-relaxed mb-10">
+            <p className="text-sm  leading-relaxed mb-10">
               Проверьте {email}.<br />Ссылка действительна 1 час.
             </p>
-            <Link href="/login" className="text-sm opacity-40 hover:opacity-80 transition-opacity underline underline-offset-4">
+            <Link href="/login" className="text-sm  hover:opacity-80 transition-opacity underline underline-offset-4">
               Вернуться на страницу входа
             </Link>
           </motion.div>

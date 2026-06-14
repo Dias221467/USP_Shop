@@ -41,7 +41,7 @@ export function ProductGrid() {
           className="mb-20 flex justify-between items-end"
         >
           <h2 className="text-7xl md:text-8xl tracking-tight font-light">Коллекция</h2>
-          <Link href="/catalog" className="text-sm opacity-50 hover:opacity-100 transition-opacity pb-4">
+          <Link href="/catalog" className="text-sm  hover:opacity-100 transition-opacity pb-4">
             Смотреть всё →
           </Link>
         </motion.div>
@@ -110,7 +110,7 @@ export function ProductGrid() {
                     transition={{ duration: 0.4 }}
                   >
                     <h3 className={`text-xl mb-1 font-light ${isDark ? '' : ''}`}>{product.name}</h3>
-                    <p className="opacity-60">₸{product.price.toLocaleString()}</p>
+                    <p className="">₸{product.price.toLocaleString()}</p>
                   </motion.div>
                 </motion.div>
               </Link>

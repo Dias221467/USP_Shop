@@ -86,7 +86,7 @@ export default function CartPage() {
               className="text-center py-32"
             >
               <ShoppingBag className="w-16 h-16 mx-auto mb-6 opacity-10" />
-              <p className="text-2xl font-light opacity-30 mb-8">Корзина пуста</p>
+              <p className="text-2xl font-light  mb-8">Корзина пуста</p>
               <Link
                 href="/catalog"
                 className="inline-flex items-center gap-2 text-sm uppercase tracking-widest bg-black text-white px-8 py-4 rounded-full hover:bg-black/80 transition-colors"
@@ -117,7 +117,7 @@ export default function CartPage() {
 
                       <div className="flex-1 min-w-0">
                         <h3 className="font-light text-base leading-snug mb-1 truncate">{item.name}</h3>
-                        <p className="text-sm opacity-40 mb-3">
+                        <p className="text-sm  mb-3">
                           {item.size && `Размер: ${item.size}`}
                           {item.size && item.color && ' · '}
                           {item.color}
@@ -158,11 +158,11 @@ export default function CartPage() {
                 <div className="sticky top-28 bg-black/[0.02] rounded-3xl p-8">
                   <h2 className="text-xl font-light mb-6">Итого</h2>
 
-                  <div className="flex justify-between items-center mb-2 text-sm opacity-60">
+                  <div className="flex justify-between items-center mb-2 text-sm ">
                     <span>Товары ({cart.items.reduce((s, i) => s + i.quantity, 0)} шт.)</span>
                     <span>₸{cart.total.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center mb-6 text-sm opacity-60">
+                  <div className="flex justify-between items-center mb-6 text-sm ">
                     <span>Доставка</span>
                     <span>По договорённости</span>
                   </div>
@@ -184,7 +184,7 @@ export default function CartPage() {
 
                   <Link
                     href="/catalog"
-                    className="block text-center text-sm opacity-40 hover:opacity-70 transition-opacity mt-4"
+                    className="block text-center text-sm  hover:opacity-70 transition-opacity mt-4"
                   >
                     Продолжить покупки
                   </Link>

@@ -82,8 +82,8 @@ export default function AccountPage() {
           >
             <div>
               <h1 className="text-6xl md:text-7xl font-light tracking-tight mb-3">{user.name}</h1>
-              <p className="opacity-40">{user.email}</p>
-              {user.phone && <p className="opacity-40 text-sm mt-1">{user.phone}</p>}
+              <p className="">{user.email}</p>
+              {user.phone && <p className=" text-sm mt-1">{user.phone}</p>}
             </div>
 
             <div className="flex flex-col gap-3 mt-4 items-end">
@@ -108,7 +108,7 @@ export default function AccountPage() {
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-light">Мои заказы</h2>
               {orders.length > 0 && (
-                <span className="text-sm opacity-40">{orders.length} заказ{orders.length === 1 ? '' : orders.length < 5 ? 'а' : 'ов'}</span>
+                <span className="text-sm ">{orders.length} заказ{orders.length === 1 ? '' : orders.length < 5 ? 'а' : 'ов'}</span>
               )}
             </div>
 
@@ -119,7 +119,7 @@ export default function AccountPage() {
                 className="text-center py-24 border border-black/5 rounded-3xl"
               >
                 <Package className="w-12 h-12 mx-auto mb-4 opacity-10" />
-                <p className="text-xl font-light opacity-30 mb-6">Заказов пока нет</p>
+                <p className="text-xl font-light  mb-6">Заказов пока нет</p>
                 <Link
                   href="/catalog"
                   className="inline-flex items-center gap-2 text-sm uppercase tracking-widest bg-black text-white px-6 py-3 rounded-full hover:bg-black/80 transition-colors"
@@ -139,16 +139,16 @@ export default function AccountPage() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <p className="text-xs opacity-40 mb-1">
+                        <p className="text-xs  mb-1">
                           {new Date(order.created_at).toLocaleDateString('ru-RU', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
                           })}
                         </p>
-                        <p className="text-sm opacity-60 font-mono">#{order.id.slice(-8).toUpperCase()}</p>
+                        <p className="text-sm  font-mono">#{order.id.slice(-8).toUpperCase()}</p>
                       </div>
-                      <span className={`text-xs px-3 py-1 rounded-full ${STATUS_COLORS[order.status] || 'bg-black/5 text-black/50'}`}>
+                      <span className={`text-xs px-3 py-1 rounded-full ${STATUS_COLORS[order.status] || 'bg-black/5 text-black'}`}>
                         {STATUS_LABELS[order.status] || order.status}
                       </span>
                     </div>
@@ -156,18 +156,18 @@ export default function AccountPage() {
                     <div className="flex flex-col gap-2 mb-4">
                       {order.items.map((item, j) => (
                         <div key={j} className="flex justify-between text-sm">
-                          <span className="opacity-70">
+                          <span className="">
                             {item.name}
                             {item.size && <span className="opacity-50"> · {item.size}</span>}
                             {item.quantity > 1 && <span className="opacity-50"> × {item.quantity}</span>}
                           </span>
-                          <span className="opacity-60">₸{item.subtotal.toLocaleString()}</span>
+                          <span className="">₸{item.subtotal.toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
 
                     <div className="border-t border-black/5 pt-4 flex justify-between items-center">
-                      <span className="text-sm opacity-40">Итого</span>
+                      <span className="text-sm ">Итого</span>
                       <span className="text-base">₸{order.total.toLocaleString()}</span>
                     </div>
                   </motion.div>

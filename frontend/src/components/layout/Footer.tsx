@@ -16,30 +16,30 @@ export function Footer() {
           </div>
 
           <div>
-            <p className="opacity-40 text-xs mb-6 tracking-widest uppercase">Каталог</p>
+            <p className=" text-xs mb-6 tracking-widest uppercase">Каталог</p>
             <div className="flex flex-col gap-3">
-              <Link href="/catalog?category=shoes" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <Link href="/catalog?category=shoes" className=" hover:opacity-100 transition-opacity text-sm">
                 Обувь
               </Link>
-              <Link href="/catalog?category=clothing" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <Link href="/catalog?category=clothing" className=" hover:opacity-100 transition-opacity text-sm">
                 Одежда
               </Link>
-              <Link href="/catalog" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <Link href="/catalog" className=" hover:opacity-100 transition-opacity text-sm">
                 Все коллекции
               </Link>
             </div>
           </div>
 
           <div>
-            <p className="opacity-40 text-xs mb-6 tracking-widest uppercase">Контакты</p>
+            <p className=" text-xs mb-6 tracking-widest uppercase">Контакты</p>
             <div className="flex flex-col gap-3">
-              <a href="https://www.instagram.com/usp_semsk/" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <a href="https://www.instagram.com/usp_semsk/" target="_blank" rel="noopener noreferrer" className=" hover:opacity-100 transition-opacity text-sm">
                 Instagram
               </a>
-              <a href="https://t.me/+IP7xvYedaB82YzAy" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <a href="https://t.me/+IP7xvYedaB82YzAy" target="_blank" rel="noopener noreferrer" className=" hover:opacity-100 transition-opacity text-sm">
                 Telegram
               </a>
-              <a href="https://wa.me/77477574852" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+              <a href="https://wa.me/77477574852" target="_blank" rel="noopener noreferrer" className=" hover:opacity-100 transition-opacity text-sm">
                 WhatsApp
               </a>
             </div>
@@ -47,8 +47,8 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="opacity-30 text-xs">© 2026 USP Store. Все права защищены.</p>
-          <p className="opacity-30 text-xs">Семей, Казахстан</p>
+          <p className=" text-xs">© 2026 USP Store. Все права защищены.</p>
+          <p className=" text-xs">Семей, Казахстан</p>
         </div>
       </div>
     </footer>

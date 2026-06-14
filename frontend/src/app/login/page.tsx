@@ -16,7 +16,7 @@ function Field({
 }) {
   return (
     <div className="relative group">
-      <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">
+      <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">
         {label}
       </label>
       <div className="relative">
@@ -26,7 +26,7 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/25 outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all duration-200 pr-10"
+          className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all duration-200 pr-10"
         />
         {children}
       </div>
@@ -110,7 +110,7 @@ export default function LoginPage() {
         <div className="absolute top-0 left-0 w-40 h-40 border-l border-t border-white/10 pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-40 h-40 border-r border-b border-white/10 pointer-events-none" />
 
-        <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm">
+        <Link href="/" className="flex items-center gap-2 text-white hover:text-white transition-colors text-sm">
           <ArrowLeft className="w-4 h-4" />
           На главную
         </Link>
@@ -124,7 +124,7 @@ export default function LoginPage() {
             <p className="text-white/20 text-xs tracking-[0.4em] uppercase mb-6">SEMEY · KAZAKHSTAN</p>
             <h1 className="text-white text-7xl font-light tracking-[0.15em] leading-none">USP</h1>
             <div className="mt-8 w-12 h-px bg-white/20" />
-            <p className="text-white/40 text-sm mt-6 leading-relaxed max-w-xs">
+            <p className="text-white text-sm mt-6 leading-relaxed max-w-xs">
               Магазин обуви и одежды. Качество в каждой детали.
             </p>
           </motion.div>
@@ -142,7 +142,7 @@ export default function LoginPage() {
       <div className="flex-1 bg-white flex items-center justify-center px-8 py-16">
         <div className="w-full max-w-[360px]">
           {/* Мобильный лого */}
-          <Link href="/" className="lg:hidden flex items-center gap-2 text-black/40 hover:text-black transition-colors text-sm mb-10">
+          <Link href="/" className="lg:hidden flex items-center gap-2 text-black hover:text-black transition-colors text-sm mb-10">
             <ArrowLeft className="w-4 h-4" />
             USP
           </Link>
@@ -152,7 +152,7 @@ export default function LoginPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center py-8">
               <Mail className="w-14 h-14 mx-auto mb-6 opacity-20" />
               <h2 className="text-2xl font-light mb-3">Проверьте почту</h2>
-              <p className="text-sm text-black/50 leading-relaxed mb-8">
+              <p className="text-sm text-black leading-relaxed mb-8">
                 Мы отправили письмо на<br />
                 <span className="text-black font-medium">{registered}</span><br />
                 Подтвердите email чтобы войти.
@@ -163,7 +163,7 @@ export default function LoginPage() {
                 <button
                   onClick={() => resendVerification(registered)}
                   disabled={resending}
-                  className="text-sm opacity-40 hover:opacity-80 transition-opacity underline underline-offset-4"
+                  className="text-sm  hover:opacity-80 transition-opacity underline underline-offset-4"
                 >
                   {resending ? 'Отправляем...' : 'Не пришло письмо? Отправить снова'}
                 </button>
@@ -179,7 +179,7 @@ export default function LoginPage() {
             <h2 className="text-3xl font-light mb-1">
               {tab === 'login' ? 'Добро пожаловать' : 'Создать аккаунт'}
             </h2>
-            <p className="text-sm text-black/40 mb-8">
+            <p className="text-sm text-black mb-8">
               {tab === 'login' ? 'Войдите в свой аккаунт' : 'Регистрация займёт минуту'}
             </p>
 
@@ -190,7 +190,7 @@ export default function LoginPage() {
                   key={t}
                   onClick={() => { setTab(t); setError(''); }}
                   className={`flex-1 py-2 text-xs uppercase tracking-widest rounded-lg transition-all duration-300 ${
-                    tab === t ? 'bg-black text-white shadow-sm' : 'text-black/40 hover:text-black/70'
+                    tab === t ? 'bg-black text-white shadow-sm' : 'text-black hover:text-black'
                   }`}
                 >
                   {t === 'login' ? 'Войти' : 'Регистрация'}
@@ -219,7 +219,7 @@ export default function LoginPage() {
                   >
                     <button
                       type="button" onClick={() => setShowPwd(!showPwd)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black transition-colors"
                     >
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -251,7 +251,7 @@ export default function LoginPage() {
 
                   <motion.button
                     type="submit" disabled={loading} whileTap={{ scale: 0.98 }}
-                    className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
+                    className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-70"
                   >
                     {loading ? 'Входим...' : 'Войти'}
                   </motion.button>
@@ -262,13 +262,13 @@ export default function LoginPage() {
                       animate={{ opacity: 1, y: 0 }}
                       className="bg-black/[0.03] rounded-xl p-4 text-center"
                     >
-                      <p className="text-xs opacity-50 mb-2">Не можете войти?</p>
+                      <p className="text-xs  mb-2">Не можете войти?</p>
                       <Link href="/forgot-password" className="text-sm font-medium hover:opacity-70 transition-opacity">
                         Сбросить пароль →
                       </Link>
                     </motion.div>
                   ) : (
-                    <Link href="/forgot-password" className="block text-center text-xs opacity-30 hover:opacity-70 transition-opacity mt-1">
+                    <Link href="/forgot-password" className="block text-center text-xs  hover:opacity-70 transition-opacity mt-1">
                       Забыли пароль?
                     </Link>
                   )}
@@ -301,7 +301,7 @@ export default function LoginPage() {
                   >
                     <button
                       type="button" onClick={() => setShowPwd(!showPwd)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black transition-colors"
                     >
                       {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -315,7 +315,7 @@ export default function LoginPage() {
 
                   <motion.button
                     type="submit" disabled={loading} whileTap={{ scale: 0.98 }}
-                    className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
+                    className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-70"
                   >
                     {loading ? 'Создаём аккаунт...' : 'Создать аккаунт'}
                   </motion.button>

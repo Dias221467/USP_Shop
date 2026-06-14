@@ -148,7 +148,7 @@ export default function CatalogPage() {
                       </motion.div>
 
                       <div className="mt-4 px-1">
-                        <p className="text-xs opacity-40 uppercase tracking-widest mb-1">{product.brand}</p>
+                        <p className="text-xs  uppercase tracking-widest mb-1">{product.brand}</p>
                         <h3 className="font-light text-base leading-snug mb-1">{product.name}</h3>
                         <p className="font-light">₸{product.price.toLocaleString()}</p>
                       </div>

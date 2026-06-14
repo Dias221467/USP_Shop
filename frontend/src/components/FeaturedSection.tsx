@@ -23,7 +23,7 @@ export function FeaturedSection() {
                 <br />шаге
               </h2>
             </div>
-            <p className="text-xl opacity-70 max-w-md leading-relaxed font-light">
+            <p className="text-xl  max-w-md leading-relaxed font-light">
               Наша обувь создана для тех, кто ценит минимализм и качество.
               Каждая деталь продумана до мелочей.
             </p>

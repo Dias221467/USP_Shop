@@ -95,13 +95,13 @@ export function HeroCarousel() {
 
       <button
         onClick={prev}
-        className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center opacity-30 hover:opacity-70 transition-opacity"
+        className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center  hover:opacity-70 transition-opacity"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
         onClick={next}
-        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center opacity-30 hover:opacity-70 transition-opacity"
+        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center  hover:opacity-70 transition-opacity"
       >
         <ChevronRight className="w-6 h-6" />
       </button>

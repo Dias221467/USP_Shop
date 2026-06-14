@@ -27,46 +27,63 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 		return nil, errors.New("payment method is required")
 	}
 
-	cart, err := s.cartRepo.GetByUserID(ctx, userID)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
+	userObjID, _ := primitive.ObjectIDFromHex(userID)
+	var items []models.OrderItem
+	var total float64
+
+	if len(req.Items) > 0 {
+		// Товары переданы напрямую из фронта (localStorage корзина)
+		for _, ri := range req.Items {
+			productObjID, _ := primitive.ObjectIDFromHex(ri.ProductID)
+			subtotal := float64(ri.Quantity) * ri.Price
+			items = append(items, models.OrderItem{
+				ProductID: productObjID,
+				Name:      ri.Name,
+				Price:     ri.Price,
+				Size:      ri.Size,
+				Color:     ri.Color,
+				Quantity:  ri.Quantity,
+				Subtotal:  subtotal,
+			})
+			total += subtotal
+		}
+	} else {
+		// Фолбэк: читаем из серверной корзины
+		cart, err := s.cartRepo.GetByUserID(ctx, userID)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				return nil, errors.New("cart is empty")
+			}
+			return nil, err
+		}
+		if len(cart.Items) == 0 {
 			return nil, errors.New("cart is empty")
 		}
-		return nil, err
-	}
-	if len(cart.Items) == 0 {
-		return nil, errors.New("cart is empty")
-	}
-
-	userObjID, _ := primitive.ObjectIDFromHex(userID)
-	items := make([]models.OrderItem, len(cart.Items))
-	for i, item := range cart.Items {
-		items[i] = models.OrderItem{
-			ProductID: item.ProductID,
-			Name:      item.Name,
-			Price:     item.Price,
-			Size:      item.Size,
-			Color:     item.Color,
-			Quantity:  item.Quantity,
-			Subtotal:  item.Subtotal,
+		for _, item := range cart.Items {
+			items = append(items, models.OrderItem{
+				ProductID: item.ProductID,
+				Name:      item.Name,
+				Price:     item.Price,
+				Size:      item.Size,
+				Color:     item.Color,
+				Quantity:  item.Quantity,
+				Subtotal:  item.Subtotal,
+			})
 		}
+		total = cart.Total
+		s.cartRepo.Clear(ctx, userID)
 	}
 
 	order := &models.Order{
 		UserID:          userObjID,
 		Items:           items,
-		Total:           cart.Total,
+		Total:           total,
 		Status:          models.OrderStatusPending,
 		ShippingAddress: req.ShippingAddress,
 		PaymentMethod:   req.PaymentMethod,
 	}
 
 	if err := s.orderRepo.Create(ctx, order); err != nil {
-		return nil, err
-	}
-
-	// Очищаем корзину после успешного создания заказа
-	if err := s.cartRepo.Clear(ctx, userID); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +98,6 @@ func (s *OrderService) GetByID(ctx context.Context, orderID, userID string, isAd
 		}
 		return nil, err
 	}
-	// Обычный пользователь может видеть только свои заказы
 	if !isAdmin && order.UserID.Hex() != userID {
 		return nil, errors.New("order not found")
 	}

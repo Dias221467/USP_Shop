@@ -46,9 +46,19 @@ type Order struct {
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
+type CreateOrderRequestItem struct {
+	ProductID string  `json:"product_id"`
+	Name      string  `json:"name"`
+	Price     float64 `json:"price"`
+	Size      string  `json:"size"`
+	Color     string  `json:"color"`
+	Quantity  int     `json:"quantity"`
+}
+
 type CreateOrderRequest struct {
-	ShippingAddress ShippingAddress `json:"shipping_address"`
-	PaymentMethod   string          `json:"payment_method"`
+	ShippingAddress ShippingAddress          `json:"shipping_address"`
+	PaymentMethod   string                   `json:"payment_method"`
+	Items           []CreateOrderRequestItem `json:"items,omitempty"`
 }
 
 type UpdateOrderStatusRequest struct {

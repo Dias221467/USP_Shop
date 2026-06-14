@@ -41,8 +41,8 @@ export default function VerifyEmailPage() {
 
         {status === 'loading' && (
           <>
-            <Loader className="w-12 h-12 mx-auto mb-6 animate-spin opacity-30" />
-            <p className="text-lg font-light opacity-50">Проверяем...</p>
+            <Loader className="w-12 h-12 mx-auto mb-6 animate-spin " />
+            <p className="text-lg font-light ">Проверяем...</p>
           </>
         )}
 

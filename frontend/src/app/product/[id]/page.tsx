@@ -86,7 +86,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
       <div className="pt-28 pb-20">
         <div className="max-w-7xl mx-auto px-8 md:px-12">
-          <Link href="/catalog" className="inline-flex items-center gap-2 text-sm opacity-40 hover:opacity-80 transition-opacity mb-10">
+          <Link href="/catalog" className="inline-flex items-center gap-2 text-sm  hover:opacity-80 transition-opacity mb-10">
             <ChevronLeft className="w-4 h-4" />
             Назад в каталог
           </Link>
@@ -135,18 +135,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {/* Инфо */}
             <div className="lg:pt-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <p className="text-sm opacity-40 uppercase tracking-widest mb-3">{product.brand}</p>
+                <p className="text-sm  uppercase tracking-widest mb-3">{product.brand}</p>
                 <h1 className="text-4xl md:text-5xl font-light leading-tight mb-4">{product.name}</h1>
                 <p className="text-3xl mb-8">₸{product.price.toLocaleString()}</p>
 
                 {product.description && (
-                  <p className="text-sm opacity-60 leading-relaxed mb-10">{product.description}</p>
+                  <p className="text-sm  leading-relaxed mb-10">{product.description}</p>
                 )}
 
                 {/* Цвет */}
                 {product.colors?.length > 0 && (
                   <div className="mb-8">
-                    <p className="text-xs opacity-40 uppercase tracking-widest mb-3">Цвет — {selectedColor}</p>
+                    <p className="text-xs  uppercase tracking-widest mb-3">Цвет — {selectedColor}</p>
                     <div className="flex gap-2">
                       {product.colors.map((color) => (
                         <button
@@ -169,7 +169,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {product.sizes?.length > 0 && (
                   <div className="mb-10">
                     <div className="flex justify-between items-center mb-3">
-                      <p className="text-xs opacity-40 uppercase tracking-widest">Размер</p>
+                      <p className="text-xs  uppercase tracking-widest">Размер</p>
                       {!selectedSize && (
                         <p className="text-xs text-red-400">Выберите размер</p>
                       )}
@@ -199,9 +199,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   whileTap={{ scale: 0.98 }}
                   className={`w-full py-5 rounded-2xl text-base tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-3 ${
                     product.stock === 0
-                      ? 'bg-black/10 text-black/30 cursor-not-allowed'
+                      ? 'bg-black/10 text-black cursor-not-allowed'
                       : !selectedSize
-                      ? 'bg-black/10 text-black/30 cursor-not-allowed'
+                      ? 'bg-black/10 text-black cursor-not-allowed'
                       : added
                       ? 'bg-green-500 text-white'
                       : 'bg-black text-white hover:bg-black/80'
@@ -222,7 +222,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-4 text-center"
                   >
-                    <Link href="/cart" className="text-sm opacity-60 hover:opacity-100 underline underline-offset-2">
+                    <Link href="/cart" className="text-sm  hover:opacity-100 underline underline-offset-2">
                       Перейти в корзину →
                     </Link>
                   </motion.div>

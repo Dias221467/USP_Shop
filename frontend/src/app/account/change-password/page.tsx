@@ -53,7 +53,7 @@ export default function ChangePasswordPage() {
         <div className="w-full max-w-md">
           <Link
             href="/account"
-            className="inline-flex items-center gap-2 text-sm opacity-40 hover:opacity-80 transition-opacity mb-10"
+            className="inline-flex items-center gap-2 text-sm  hover:opacity-80 transition-opacity mb-10"
           >
             <ArrowLeft className="w-4 h-4" />
             Вернуться в аккаунт
@@ -65,7 +65,7 @@ export default function ChangePasswordPage() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl font-light mb-2">Сменить пароль</h1>
-            <p className="text-sm opacity-40 mb-10">Введите текущий и новый пароль</p>
+            <p className="text-sm  mb-10">Введите текущий и новый пароль</p>
 
             {done ? (
               <motion.div
@@ -75,13 +75,13 @@ export default function ChangePasswordPage() {
               >
                 <CheckCircle className="w-14 h-14 mb-5 opacity-80" />
                 <p className="text-xl font-light mb-2">Пароль изменён</p>
-                <p className="text-sm opacity-40">Перенаправляем в аккаунт...</p>
+                <p className="text-sm ">Перенаправляем в аккаунт...</p>
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 {/* Текущий пароль */}
                 <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">
+                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">
                     Текущий пароль
                   </label>
                   <div className="relative">
@@ -91,12 +91,12 @@ export default function ChangePasswordPage() {
                       value={form.current}
                       onChange={(e) => setForm({ ...form, current: e.target.value })}
                       placeholder="Введите текущий пароль"
-                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/25 outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all pr-10"
+                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrent(!showCurrent)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black transition-colors"
                     >
                       {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -105,7 +105,7 @@ export default function ChangePasswordPage() {
 
                 {/* Новый пароль */}
                 <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">
+                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">
                     Новый пароль
                   </label>
                   <div className="relative">
@@ -115,12 +115,12 @@ export default function ChangePasswordPage() {
                       value={form.next}
                       onChange={(e) => setForm({ ...form, next: e.target.value })}
                       placeholder="Минимум 6 символов"
-                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/25 outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all pr-10"
+                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNext(!showNext)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black/30 hover:text-black/60 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black transition-colors"
                     >
                       {showNext ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -129,7 +129,7 @@ export default function ChangePasswordPage() {
 
                 {/* Подтверждение */}
                 <div>
-                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">
+                  <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">
                     Подтвердите новый пароль
                   </label>
                   <input
@@ -138,7 +138,7 @@ export default function ChangePasswordPage() {
                     value={form.confirm}
                     onChange={(e) => setForm({ ...form, confirm: e.target.value })}
                     placeholder="Повторите пароль"
-                    className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/25 outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all"
+                    className="w-full bg-black/[0.03] rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black outline-none border border-transparent focus:border-black/20 focus:bg-white transition-all"
                   />
                 </div>
 
@@ -156,7 +156,7 @@ export default function ChangePasswordPage() {
                   type="submit"
                   disabled={loading}
                   whileTap={{ scale: 0.98 }}
-                  className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
+                  className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-70"
                 >
                   {loading ? 'Сохраняем...' : 'Сохранить пароль'}
                 </motion.button>

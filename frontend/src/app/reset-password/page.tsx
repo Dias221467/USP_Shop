@@ -46,8 +46,8 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen bg-white flex items-center justify-center px-8">
         <div className="text-center">
           <Link href="/" className="block text-3xl font-light tracking-[0.3em] mb-10">USP</Link>
-          <p className="opacity-40">Недействительная ссылка</p>
-          <Link href="/forgot-password" className="block mt-6 text-sm underline underline-offset-4 opacity-50 hover:opacity-80">
+          <p className="">Недействительная ссылка</p>
+          <Link href="/forgot-password" className="block mt-6 text-sm underline underline-offset-4  hover:opacity-80">
             Запросить новую
           </Link>
         </div>
@@ -68,11 +68,11 @@ export default function ResetPasswordPage() {
         {!done ? (
           <>
             <h1 className="text-2xl font-light mb-2">Новый пароль</h1>
-            <p className="text-sm opacity-40 mb-8">Придумайте новый пароль для аккаунта.</p>
+            <p className="text-sm  mb-8">Придумайте новый пароль для аккаунта.</p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="relative">
-                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">Новый пароль</label>
+                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">Новый пароль</label>
                 <input
                   type={showPwd ? 'text' : 'password'}
                   required
@@ -84,14 +84,14 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 bottom-3.5 text-black/30 hover:text-black/60 transition-colors"
+                  className="absolute right-3 bottom-3.5 text-black hover:text-black transition-colors"
                 >
                   {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black/40 mb-2">Повторите пароль</label>
+                <label className="block text-[11px] font-medium uppercase tracking-[0.15em] text-black mb-2">Повторите пароль</label>
                 <input
                   type={showPwd ? 'text' : 'password'}
                   required
@@ -108,7 +108,7 @@ export default function ResetPasswordPage() {
                 type="submit"
                 disabled={loading}
                 whileTap={{ scale: 0.98 }}
-                className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
+                className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-70"
               >
                 {loading ? 'Сохраняем...' : 'Сохранить пароль'}
               </motion.button>
@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
               <CheckCircle className="w-16 h-16 mx-auto mb-6 text-green-500" />
             </motion.div>
             <h1 className="text-2xl font-light mb-3">Пароль изменён</h1>
-            <p className="text-sm opacity-50">Перенаправляем на страницу входа...</p>
+            <p className="text-sm ">Перенаправляем на страницу входа...</p>
           </motion.div>
         )}
       </motion.div>
