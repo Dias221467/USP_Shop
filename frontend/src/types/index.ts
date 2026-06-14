@@ -1,0 +1,53 @@
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'user' | 'admin';
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'shoes' | 'clothing';
+  brand: string;
+  images: string[];
+  sizes: string[];
+  colors: string[];
+  stock: number;
+  is_active: boolean;
+}
+
+export interface CartItem {
+  product_id: string;
+  name: string;
+  price: number;
+  size: string;
+  color: string;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  total: number;
+}
+
+export interface Order {
+  id: string;
+  items: CartItem[];
+  total: number;
+  status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  shipping_address: {
+    city: string;
+    street: string;
+    house: string;
+    flat: string;
+    comment: string;
+  };
+  payment_method: string;
+  created_at: string;
+}
