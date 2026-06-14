@@ -8,10 +8,15 @@ import (
 )
 
 type Config struct {
-	MongoURI  string
-	DBName    string
-	JWTSecret string
-	Port      string
+	MongoURI     string
+	DBName       string
+	JWTSecret    string
+	Port         string
+	SMTPHost     string
+	SMTPPort     string
+	SMTPUser     string
+	SMTPPassword string
+	AppURL       string
 }
 
 func Load() *Config {
@@ -20,10 +25,15 @@ func Load() *Config {
 	}
 
 	return &Config{
-		MongoURI:  getEnv("MONGO_URI", "mongodb://localhost:27017"),
-		DBName:    getEnv("DB_NAME", "uspshop"),
-		JWTSecret: getEnv("JWT_SECRET", "secret"),
-		Port:      getEnv("PORT", "8080"),
+		MongoURI:     getEnv("MONGO_URI", "mongodb://localhost:27017"),
+		DBName:       getEnv("DB_NAME", "uspshop"),
+		JWTSecret:    getEnv("JWT_SECRET", "secret"),
+		Port:         getEnv("PORT", "8080"),
+		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnv("SMTP_PORT", "587"),
+		SMTPUser:     getEnv("SMTP_USER", ""),
+		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		AppURL:       getEnv("APP_URL", "http://localhost:3000"),
 	}
 }
 

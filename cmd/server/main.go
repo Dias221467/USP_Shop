@@ -13,6 +13,7 @@ import (
 	"github.com/Dias221467/USPShop/internal/handlers"
 	"github.com/Dias221467/USPShop/internal/repository"
 	"github.com/Dias221467/USPShop/internal/services"
+	"github.com/Dias221467/USPShop/pkg/email"
 	"github.com/Dias221467/USPShop/pkg/logger"
 	"github.com/Dias221467/USPShop/pkg/middleware"
 	"github.com/gorilla/mux"
@@ -32,8 +33,11 @@ func main() {
 	cartRepo := repository.NewCartRepository(db)
 	orderRepo := repository.NewOrderRepository(db)
 
+	// Email sender
+	mailer := email.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword)
+
 	// Services
-	userService := services.NewUserService(userRepo, cfg.JWTSecret)
+	userService := services.NewUserService(userRepo, cfg.JWTSecret, mailer, cfg.AppURL)
 	productService := services.NewProductService(productRepo)
 	cartService := services.NewCartService(cartRepo, productRepo)
 	orderService := services.NewOrderService(orderRepo, cartRepo)
@@ -57,6 +61,10 @@ func main() {
 	auth := r.PathPrefix("/api/auth").Subrouter()
 	auth.HandleFunc("/register", userHandler.Register).Methods("POST")
 	auth.HandleFunc("/login", userHandler.Login).Methods("POST")
+	auth.HandleFunc("/verify-email", userHandler.VerifyEmail).Methods("GET")
+	auth.HandleFunc("/resend-verification", userHandler.ResendVerification).Methods("POST")
+	auth.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
+	auth.HandleFunc("/reset-password", userHandler.ResetPassword).Methods("POST")
 
 	// Public product routes
 	r.HandleFunc("/api/products", productHandler.GetAll).Methods("GET")
@@ -69,6 +77,7 @@ func main() {
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware(cfg.JWTSecret, userRepo))
 	api.HandleFunc("/me", userHandler.Me).Methods("GET")
+	api.HandleFunc("/change-password", userHandler.ChangePassword).Methods("PATCH")
 
 	// Cart routes
 	api.HandleFunc("/cart", cartHandler.GetCart).Methods("GET")

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, LogOut, ChevronRight } from 'lucide-react';
+import { Package, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
@@ -39,7 +39,7 @@ export default function AccountPage() {
     }
 
     Promise.all([
-      api.get('/api/auth/me'),
+      api.get('/api/me'),
       api.get('/api/orders'),
     ])
       .then(([userRes, ordersRes]) => {
@@ -86,13 +86,21 @@ export default function AccountPage() {
               {user.phone && <p className="opacity-40 text-sm mt-1">{user.phone}</p>}
             </div>
 
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 text-sm opacity-30 hover:opacity-70 transition-opacity mt-4"
-            >
-              <LogOut className="w-4 h-4" />
-              Выйти
-            </button>
+            <div className="flex flex-col gap-3 mt-4 items-end">
+              <Link
+                href="/account/change-password"
+                className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl border border-black/10 hover:border-black/30 transition-colors"
+              >
+                Сменить пароль
+              </Link>
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-black text-white hover:bg-black/80 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Выйти
+              </button>
+            </div>
           </motion.div>
 
           {/* Заказы */}

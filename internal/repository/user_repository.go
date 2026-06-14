@@ -36,7 +36,6 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 	return &user, nil
 }
 
-// FindByID implements middleware.UserFetcher — возвращает только token_version
 func (r *UserRepository) FindByID(ctx context.Context, id string) (int, error) {
 	user, err := r.findByID(ctx, id)
 	if err != nil {
@@ -78,4 +77,72 @@ func (r *UserRepository) IncrementTokenVersion(ctx context.Context, id string) (
 		return 0, err
 	}
 	return user.TokenVersion, nil
+}
+
+func (r *UserRepository) SetVerificationToken(ctx context.Context, id string, token string, exp time.Time) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$set": bson.M{
+			"verification_token": token,
+			"verification_exp":   exp,
+			"updated_at":         time.Now(),
+		},
+	})
+	return err
+}
+
+func (r *UserRepository) FindByVerificationToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.collection.FindOne(ctx, bson.M{"verification_token": token}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) VerifyEmail(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$set":   bson.M{"email_verified": true, "updated_at": time.Now()},
+		"$unset": bson.M{"verification_token": "", "verification_exp": ""},
+	})
+	return err
+}
+
+func (r *UserRepository) SetResetToken(ctx context.Context, email string, token string, exp time.Time) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"email": email}, bson.M{
+		"$set": bson.M{
+			"reset_token":     token,
+			"reset_token_exp": exp,
+			"updated_at":      time.Now(),
+		},
+	})
+	return err
+}
+
+func (r *UserRepository) FindByResetToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	err := r.collection.FindOne(ctx, bson.M{"reset_token": token}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) UpdatePassword(ctx context.Context, id string, hashedPassword string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$set":   bson.M{"password": hashedPassword, "updated_at": time.Now()},
+		"$unset": bson.M{"reset_token": "", "reset_token_exp": ""},
+	})
+	return err
 }

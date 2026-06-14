@@ -36,6 +36,9 @@ export function Footer() {
               <a href="https://www.instagram.com/usp_semsk/" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
                 Instagram
               </a>
+              <a href="https://t.me/+IP7xvYedaB82YzAy" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
+                Telegram
+              </a>
               <a href="https://wa.me/77477574852" target="_blank" rel="noopener noreferrer" className="opacity-70 hover:opacity-100 transition-opacity text-sm">
                 WhatsApp
               </a>

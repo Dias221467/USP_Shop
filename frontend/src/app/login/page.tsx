@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
@@ -43,6 +43,11 @@ export default function LoginPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [registered, setRegistered] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '' });
@@ -54,13 +59,20 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setEmailNotVerified(false);
     setLoading(true);
     try {
       const res = await api.post('/api/auth/login', loginForm);
       localStorage.setItem('token', res.data.token);
       router.push(redirect);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Неверный email или пароль');
+      const msg = err.response?.data?.error || '';
+      if (msg === 'email not verified') {
+        setEmailNotVerified(true);
+      } else {
+        setFailedAttempts((n) => n + 1);
+        setError(msg || 'Неверный email или пароль');
+      }
     } finally {
       setLoading(false);
     }
@@ -71,13 +83,22 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/api/auth/register', regForm);
-      localStorage.setItem('token', res.data.token);
-      router.push(redirect);
+      await api.post('/api/auth/register', regForm);
+      setRegistered(regForm.email);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Ошибка регистрации');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendVerification = async (email: string) => {
+    setResending(true);
+    try {
+      await api.post('/api/auth/resend-verification', { email });
+      setResent(true);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -125,6 +146,30 @@ export default function LoginPage() {
             <ArrowLeft className="w-4 h-4" />
             USP
           </Link>
+
+          {/* Экран после регистрации */}
+          {registered ? (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center py-8">
+              <Mail className="w-14 h-14 mx-auto mb-6 opacity-20" />
+              <h2 className="text-2xl font-light mb-3">Проверьте почту</h2>
+              <p className="text-sm text-black/50 leading-relaxed mb-8">
+                Мы отправили письмо на<br />
+                <span className="text-black font-medium">{registered}</span><br />
+                Подтвердите email чтобы войти.
+              </p>
+              {resent ? (
+                <p className="text-green-500 text-sm">Письмо отправлено повторно</p>
+              ) : (
+                <button
+                  onClick={() => resendVerification(registered)}
+                  disabled={resending}
+                  className="text-sm opacity-40 hover:opacity-80 transition-opacity underline underline-offset-4"
+                >
+                  {resending ? 'Отправляем...' : 'Не пришло письмо? Отправить снова'}
+                </button>
+              )}
+            </motion.div>
+          ) : (
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -186,12 +231,47 @@ export default function LoginPage() {
                     </motion.p>
                   )}
 
+                  {emailNotVerified && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <p className="text-amber-700 text-xs mb-2">Email не подтверждён. Проверьте почту или запросите новое письмо.</p>
+                      {resent ? (
+                        <p className="text-green-600 text-xs">Письмо отправлено</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => resendVerification(loginForm.email)}
+                          disabled={resending}
+                          className="text-xs text-amber-700 underline underline-offset-2 hover:text-amber-900 transition-colors"
+                        >
+                          {resending ? 'Отправляем...' : 'Отправить письмо повторно'}
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
+
                   <motion.button
                     type="submit" disabled={loading} whileTap={{ scale: 0.98 }}
                     className="mt-2 w-full py-4 bg-black text-white rounded-xl text-xs uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-40"
                   >
                     {loading ? 'Входим...' : 'Войти'}
                   </motion.button>
+
+                  {failedAttempts >= 2 ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-black/[0.03] rounded-xl p-4 text-center"
+                    >
+                      <p className="text-xs opacity-50 mb-2">Не можете войти?</p>
+                      <Link href="/forgot-password" className="text-sm font-medium hover:opacity-70 transition-opacity">
+                        Сбросить пароль →
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <Link href="/forgot-password" className="block text-center text-xs opacity-30 hover:opacity-70 transition-opacity mt-1">
+                      Забыли пароль?
+                    </Link>
+                  )}
                 </motion.form>
               ) : (
                 <motion.form
@@ -243,6 +323,7 @@ export default function LoginPage() {
               )}
             </AnimatePresence>
           </motion.div>
+          )} {/* конец registered ? ... : ( */}
         </div>
       </div>
     </div>
