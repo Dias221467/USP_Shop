@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Package, LogOut } from 'lucide-react';
+import { Package, LogOut, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
@@ -56,6 +56,15 @@ export default function AccountPage() {
   const logout = () => {
     localStorage.removeItem('token');
     router.push('/');
+  };
+
+  const cancelOrder = async (orderId: string) => {
+    try {
+      await api.patch(`/api/orders/${orderId}/cancel`);
+      setOrders((prev) =>
+        prev.map((o) => o.id === orderId ? { ...o, status: 'cancelled' } : o)
+      );
+    } catch {}
   };
 
   if (loading) {
@@ -168,7 +177,18 @@ export default function AccountPage() {
 
                     <div className="border-t border-black/5 pt-4 flex justify-between items-center">
                       <span className="text-sm ">Итого</span>
-                      <span className="text-base">₸{order.total.toLocaleString()}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-base">₸{order.total.toLocaleString()}</span>
+                        {order.status === 'pending' && (
+                          <button
+                            onClick={() => cancelOrder(order.id)}
+                            className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 transition-colors"
+                          >
+                            <X className="w-3 h-3" />
+                            Отменить
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))}

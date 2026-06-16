@@ -91,6 +91,7 @@ func main() {
 	api.HandleFunc("/orders", orderHandler.Create).Methods("POST")
 	api.HandleFunc("/orders", orderHandler.GetMyOrders).Methods("GET")
 	api.HandleFunc("/orders/{id}", orderHandler.GetByID).Methods("GET")
+	api.HandleFunc("/orders/{id}/cancel", orderHandler.CancelOrder).Methods("PATCH")
 	api.HandleFunc("/support/me", supportHandler.GetVisitorInfo).Methods("GET")
 
 	// Admin routes (требуют токен + роль admin)

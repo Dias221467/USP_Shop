@@ -104,6 +104,20 @@ func (s *OrderService) GetByID(ctx context.Context, orderID, userID string, isAd
 	return order, nil
 }
 
+func (s *OrderService) CancelOrder(ctx context.Context, orderID, userID string) error {
+	order, err := s.orderRepo.FindByID(ctx, orderID)
+	if err != nil {
+		return errors.New("order not found")
+	}
+	if order.UserID.Hex() != userID {
+		return errors.New("order not found")
+	}
+	if order.Status != models.OrderStatusPending {
+		return errors.New("only pending orders can be cancelled")
+	}
+	return s.orderRepo.UpdateStatus(ctx, orderID, models.OrderStatusCancelled)
+}
+
 func (s *OrderService) GetMyOrders(ctx context.Context, userID string) ([]models.Order, error) {
 	return s.orderRepo.FindByUserID(ctx, userID)
 }

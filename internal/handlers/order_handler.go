@@ -47,6 +47,17 @@ func (h *OrderHandler) GetMyOrders(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, orders)
 }
 
+// PATCH /api/orders/{id}/cancel
+func (h *OrderHandler) CancelOrder(w http.ResponseWriter, r *http.Request) {
+	claims := getClaims(r)
+	id := mux.Vars(r)["id"]
+	if err := h.service.CancelOrder(r.Context(), id, claims.UserID); err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Order cancelled"})
+}
+
 // GET /api/orders/{id}
 func (h *OrderHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	claims := getClaims(r)
