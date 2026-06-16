@@ -5,9 +5,25 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+function getTokenRole(): string | null {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
 export function Header() {
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(getTokenRole() === 'admin');
+  }, []);
 
   useEffect(() => {
     const syncCart = () => {
@@ -59,6 +75,11 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-6">
+          {isAdmin && (
+            <Link href="/admin" className="text-xs uppercase tracking-widest hover:opacity-50 transition-opacity duration-300">
+              Админ
+            </Link>
+          )}
           <Link href="/account" className="hover:opacity-50 transition-opacity duration-300">
             <User className="w-5 h-5" />
           </Link>
