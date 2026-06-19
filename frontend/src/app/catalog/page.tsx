@@ -29,12 +29,16 @@ const FILTERS = [
 
 export default function CatalogPage() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category') || '';
+  const categoryParam = searchParams.get('category') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [category, setCategory] = useState(initialCategory);
+  const [category, setCategory] = useState(categoryParam);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCategory(categoryParam);
+  }, [categoryParam]);
 
   useEffect(() => {
     setLoading(true);
@@ -60,7 +64,14 @@ export default function CatalogPage() {
             transition={{ duration: 0.8 }}
             className="mb-16"
           >
-            <h1 className="text-7xl md:text-8xl tracking-tight mb-10">Каталог</h1>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+              <h1 className="text-7xl md:text-8xl tracking-tight">Каталог</h1>
+              {!loading && (
+                <p className="text-black/30 text-sm pb-2">
+                  {products.length} {products.length === 1 ? 'товар' : products.length < 5 ? 'товара' : 'товаров'}
+                </p>
+              )}
+            </div>
 
             <div className="flex gap-2">
               {FILTERS.map((f) => (

@@ -135,9 +135,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {/* Инфо */}
             <div className="lg:pt-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-                <p className="text-sm  uppercase tracking-widest mb-3">{product.brand}</p>
+                <p className="text-sm uppercase tracking-widest mb-3 text-black/40">{product.brand}</p>
                 <h1 className="text-4xl md:text-5xl font-light leading-tight mb-4">{product.name}</h1>
-                <p className="text-3xl mb-8">₸{product.price.toLocaleString()}</p>
+                <div className="flex items-center gap-4 mb-8">
+                  <p className="text-3xl">₸{product.price.toLocaleString()}</p>
+                  {product.stock > 0 && product.stock <= 4 && (
+                    <span className="text-xs px-3 py-1 rounded-full bg-orange-50 text-orange-500">
+                      Осталось {product.stock} шт.
+                    </span>
+                  )}
+                  {product.stock === 0 && (
+                    <span className="text-xs px-3 py-1 rounded-full bg-red-50 text-red-400">
+                      Нет в наличии
+                    </span>
+                  )}
+                  {product.stock > 4 && (
+                    <span className="text-xs px-3 py-1 rounded-full bg-green-50 text-green-600">
+                      В наличии
+                    </span>
+                  )}
+                </div>
 
                 {product.description && (
                   <p className="text-sm  leading-relaxed mb-10">{product.description}</p>
@@ -222,11 +239,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-4 text-center"
                   >
-                    <Link href="/cart" className="text-sm  hover:opacity-100 underline underline-offset-2">
+                    <Link href="/cart" className="text-sm hover:opacity-100 underline underline-offset-2">
                       Перейти в корзину →
                     </Link>
                   </motion.div>
                 )}
+
+                {/* Delivery info */}
+                <div className="mt-8 pt-8 border-t border-black/5 space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-black/50">
+                    <span className="text-lg">🏪</span>
+                    <span>Самовывоз из магазина в Семее</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-black/50">
+                    <span className="text-lg">📦</span>
+                    <span>Доставка по Казахстану от 1 000 ₸</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-black/50">
+                    <span className="text-lg">💳</span>
+                    <span>Оплата Kaspi Pay или наличными</span>
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>

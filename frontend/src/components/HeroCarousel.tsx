@@ -81,7 +81,7 @@ export function HeroCarousel() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -24 }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.65, 0, 0.35, 1] }}
-            className="absolute bottom-24 left-0 right-0 text-center z-20 px-8"
+            className="absolute bottom-20 left-0 right-0 text-center z-20 px-8 space-y-4"
           >
             <h2
               className="text-xl md:text-3xl tracking-[0.2em] font-light uppercase"
@@ -89,24 +89,36 @@ export function HeroCarousel() {
             >
               {slide.model}
             </h2>
+            <a
+              href="/catalog"
+              className="inline-block px-6 py-2.5 rounded-full text-xs tracking-widest uppercase border border-black/20 hover:border-black/50 hover:bg-black hover:text-white transition-all duration-300"
+              style={{ color: slide.accent || undefined }}
+            >
+              Смотреть в каталоге
+            </a>
           </motion.div>
         </AnimatePresence>
       </div>
 
       <button
         onClick={prev}
-        className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center  hover:opacity-70 transition-opacity"
+        className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
         onClick={next}
-        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center  hover:opacity-70 transition-opacity"
+        className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center hover:opacity-70 transition-opacity"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      <div className="absolute bottom-10 left-0 right-0 z-20 flex justify-center gap-2">
+      {/* Slide counter */}
+      <div className="absolute top-32 right-8 z-20 text-xs tracking-widest text-black/30 font-mono">
+        {String(current + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
+      </div>
+
+      <div className="absolute bottom-8 left-0 right-0 z-20 flex justify-center gap-2">
         {slides.map((_, i) => (
           <button
             key={i}

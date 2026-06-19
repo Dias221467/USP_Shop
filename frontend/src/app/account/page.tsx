@@ -87,24 +87,34 @@ export default function AccountPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="mb-16 flex items-start justify-between"
+            className="mb-16"
           >
-            <div>
-              <h1 className="text-6xl md:text-7xl font-light tracking-tight mb-3">{user.name}</h1>
-              <p className="">{user.email}</p>
-              {user.phone && <p className=" text-sm mt-1">{user.phone}</p>}
+            {/* Profile card */}
+            <div className="rounded-3xl bg-black text-white p-8 md:p-10 mb-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-white/30 text-xs tracking-widest uppercase mb-2">Аккаунт</p>
+                  <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-3">{user.name}</h1>
+                  <p className="text-white/50 text-sm">{user.email}</p>
+                  {user.phone && <p className="text-white/50 text-sm mt-1">{user.phone}</p>}
+                </div>
+                <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
+                  <span className="text-2xl font-light">{user.name.charAt(0).toUpperCase()}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 mt-4 items-end">
+            {/* Action buttons */}
+            <div className="flex gap-3">
               <Link
                 href="/account/change-password"
-                className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl border border-black/10 hover:border-black/30 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 text-sm py-3 rounded-2xl border border-black/10 hover:border-black/30 transition-colors"
               >
                 Сменить пароль
               </Link>
               <button
                 onClick={logout}
-                className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl bg-black text-white hover:bg-black/80 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 text-sm py-3 rounded-2xl bg-black text-white hover:bg-black/80 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Выйти

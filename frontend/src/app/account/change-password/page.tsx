@@ -73,9 +73,16 @@ export default function ChangePasswordPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center text-center py-12"
               >
-                <CheckCircle className="w-14 h-14 mb-5 opacity-80" />
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                  className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-5"
+                >
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </motion.div>
                 <p className="text-xl font-light mb-2">Пароль изменён</p>
-                <p className="text-sm ">Перенаправляем в аккаунт...</p>
+                <p className="text-sm text-black/40">Перенаправляем в аккаунт...</p>
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">

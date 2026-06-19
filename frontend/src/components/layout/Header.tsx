@@ -4,6 +4,7 @@ import { ShoppingBag, Menu, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 function getTokenRole(): string | null {
   try {
@@ -17,6 +18,7 @@ function getTokenRole(): string | null {
 }
 
 export function Header() {
+  const pathname = usePathname();
   const [cartCount, setCartCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -62,14 +64,14 @@ export function Header() {
           USP
         </Link>
 
-        <nav className="hidden lg:flex gap-16 absolute left-1/2 -translate-x-1/2">
-          <Link href="/catalog?category=shoes" className="hover:opacity-50 transition-opacity duration-300">
+        <nav className="hidden lg:flex gap-16 absolute left-1/2 -translate-x-1/2 text-sm">
+          <Link href="/catalog?category=shoes" className={`transition-opacity duration-300 hover:opacity-50 ${pathname === '/catalog' ? 'opacity-100' : ''}`}>
             Обувь
           </Link>
-          <Link href="/catalog?category=clothing" className="hover:opacity-50 transition-opacity duration-300">
+          <Link href="/catalog?category=clothing" className="transition-opacity duration-300 hover:opacity-50">
             Одежда
           </Link>
-          <Link href="/catalog" className="hover:opacity-50 transition-opacity duration-300">
+          <Link href="/catalog" className="transition-opacity duration-300 hover:opacity-50">
             Коллекции
           </Link>
         </nav>
