@@ -56,7 +56,7 @@ export default function CatalogPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <div className="pt-32 pb-20 px-8 md:px-12">
+      <div className="pt-28 md:pt-32 pb-20 px-4 md:px-8 lg:px-12">
         <div className="max-w-[1600px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -65,7 +65,7 @@ export default function CatalogPage() {
             className="mb-16"
           >
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
-              <h1 className="text-7xl md:text-8xl tracking-tight">Каталог</h1>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl tracking-tight">Каталог</h1>
               {!loading && (
                 <p className="text-black/30 text-sm pb-2">
                   {products.length} {products.length === 1 ? 'товар' : products.length < 5 ? 'товара' : 'товаров'}

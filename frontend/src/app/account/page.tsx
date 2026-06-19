@@ -81,7 +81,7 @@ export default function AccountPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <div className="pt-32 pb-20 px-8 md:px-12">
+      <div className="pt-28 pb-20 px-4 md:px-8 lg:px-12">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

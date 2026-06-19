@@ -84,8 +84,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     <div className="min-h-screen bg-white">
       <Header />
 
-      <div className="pt-28 pb-20">
-        <div className="max-w-7xl mx-auto px-8 md:px-12">
+      <div className="pt-24 pb-20">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12">
           <Link href="/catalog" className="inline-flex items-center gap-2 text-sm  hover:opacity-80 transition-opacity mb-10">
             <ChevronLeft className="w-4 h-4" />
             Назад в каталог

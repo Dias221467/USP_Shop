@@ -4,11 +4,11 @@ import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="bg-black text-white py-20 px-8">
+    <footer className="bg-black text-white py-16 md:py-20 px-6 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
           {/* Brand */}
-          <div className="md:col-span-2">
+          <div className="col-span-2 md:col-span-2">
             <h3 className="text-4xl tracking-tight mb-4">USP</h3>
             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
               Магазин обуви и одежды в Семее. Оригинальные модели ведущих брендов.

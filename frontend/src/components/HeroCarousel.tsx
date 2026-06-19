@@ -81,7 +81,7 @@ export function HeroCarousel() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -24 }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.65, 0, 0.35, 1] }}
-            className="absolute bottom-20 left-0 right-0 text-center z-20 px-8 space-y-4"
+            className="absolute bottom-20 md:bottom-20 left-0 right-0 text-center z-20 px-8 space-y-3"
           >
             <h2
               className="text-xl md:text-3xl tracking-[0.2em] font-light uppercase"

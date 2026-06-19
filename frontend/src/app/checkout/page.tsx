@@ -156,13 +156,13 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <div className="pt-32 pb-20 px-8 md:px-12">
+      <div className="pt-28 pb-20 px-4 md:px-8 lg:px-12">
         <div className="max-w-5xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl md:text-6xl font-light mb-16"
+            className="text-4xl md:text-5xl lg:text-6xl font-light mb-10 md:mb-16"
           >
             Оформление
           </motion.h1>

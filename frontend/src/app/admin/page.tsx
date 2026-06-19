@@ -137,17 +137,18 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#fafafa]">
       <Header />
 
-      <div className="pt-28 pb-20 px-8 md:px-12">
+      <div className="pt-28 pb-20 px-4 md:px-8 lg:px-12">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-10">
-            <h1 className="text-4xl font-light">Панель управления</h1>
+          <div className="flex items-center justify-between mb-8 gap-4">
+            <h1 className="text-2xl md:text-4xl font-light">Панель управления</h1>
             {tab === 'products' && (
               <button
                 onClick={openAdd}
-                className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl text-sm hover:bg-black/80 transition-colors"
+                className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-xl text-sm hover:bg-black/80 transition-colors flex-shrink-0"
               >
                 <Plus className="w-4 h-4" />
-                Добавить товар
+                <span className="hidden sm:inline">Добавить товар</span>
+                <span className="sm:hidden">Добавить</span>
               </button>
             )}
           </div>
@@ -186,8 +187,8 @@ export default function AdminPage() {
                   ? p.images[0].startsWith('http') ? p.images[0] : `${API_URL}${p.images[0]}`
                   : null;
                 return (
-                  <div key={p.id} className="bg-white rounded-2xl p-4 flex items-center gap-4 border border-black/5">
-                    <div className="w-16 h-16 rounded-xl bg-[#f5f5f5] flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <div key={p.id} className="bg-white rounded-2xl p-3 md:p-4 flex items-center gap-3 border border-black/5">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-[#f5f5f5] flex-shrink-0 overflow-hidden flex items-center justify-center">
                       {img ? (
                         <img src={img} alt={p.name} className="w-full h-full object-contain p-1" />
                       ) : (
@@ -195,16 +196,17 @@ export default function AdminPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{p.name}</p>
-                      <p className="text-xs text-black/40 mt-0.5">{p.brand} · {p.category === 'shoes' ? 'Обувь' : 'Одежда'}</p>
+                      <p className="font-medium text-sm truncate">{p.name}</p>
+                      <p className="text-xs text-black/40 mt-0.5">{p.brand}</p>
+                      <p className="text-xs text-black/40 mt-0.5 md:hidden">₸{p.price.toLocaleString()}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
+                    <div className="text-right flex-shrink-0 hidden md:block">
                       <p className="font-medium">₸{p.price.toLocaleString()}</p>
                       <p className="text-xs text-black/40 mt-0.5">
-                        {p.stock > 0 ? `${p.stock} шт` : <span className="text-red-400">Нет в наличии</span>}
+                        {p.stock > 0 ? `${p.stock} шт` : <span className="text-red-400">Нет</span>}
                       </p>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => openEdit(p)}
                         className="p-2 rounded-lg hover:bg-black/5 transition-colors"
@@ -229,8 +231,8 @@ export default function AdminPage() {
                 <div className="text-center py-20 text-black/30">Заказов пока нет</div>
               )}
               {orders.map((order) => (
-                <div key={order.id} className="bg-white rounded-2xl p-5 border border-black/5">
-                  <div className="flex items-start justify-between mb-3">
+                <div key={order.id} className="bg-white rounded-2xl p-4 md:p-5 border border-black/5">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                     <div>
                       <p className="font-mono text-sm font-medium">#{order.id?.slice(-8).toUpperCase()}</p>
                       <p className="text-xs text-black/40 mt-0.5">

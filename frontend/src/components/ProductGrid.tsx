@@ -31,16 +31,16 @@ export function ProductGrid() {
   const bgColors = ['#f0f0f0', '#fafafa', '#f8f8f8', '#2a2a2a', '#e8e8e8', '#f5f5f5'];
 
   return (
-    <section className="py-32 px-8 bg-white">
+    <section className="py-20 md:py-32 px-6 md:px-8 bg-white">
       <div className="max-w-[1600px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="mb-20 flex justify-between items-end"
+          className="mb-12 md:mb-20 flex justify-between items-end"
         >
-          <h2 className="text-7xl md:text-8xl tracking-tight font-light">Коллекция</h2>
+          <h2 className="text-5xl md:text-7xl lg:text-8xl tracking-tight font-light">Коллекция</h2>
           <Link href="/catalog" className="text-sm  hover:opacity-100 transition-opacity pb-4">
             Смотреть всё →
           </Link>

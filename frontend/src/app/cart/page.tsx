@@ -68,13 +68,13 @@ export default function CartPage() {
     <div className="min-h-screen bg-white">
       <Header />
 
-      <div className="pt-32 pb-20 px-8 md:px-12">
+      <div className="pt-28 pb-20 px-4 md:px-8 lg:px-12">
         <div className="max-w-4xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
-            className="text-6xl md:text-7xl font-light tracking-tight mb-16"
+            className="text-5xl md:text-6xl lg:text-7xl font-light tracking-tight mb-10 md:mb-16"
           >
             Корзина
           </motion.h1>
