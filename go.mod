@@ -1,6 +1,6 @@
 module github.com/Dias221467/USPShop
 
-go 1.21.5
+go 1.21
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.1

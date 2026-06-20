@@ -1,36 +1,46 @@
 package email
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"net/smtp"
+	"net/http"
 )
 
 type Sender struct {
-	host     string
-	port     string
-	user     string
-	password string
+	apiKey string
+	from   string
 }
 
-func NewSender(host, port, user, password string) *Sender {
-	return &Sender{host: host, port: port, user: user, password: password}
+func NewSender(apiKey, from string) *Sender {
+	return &Sender{apiKey: apiKey, from: from}
 }
 
 func (s *Sender) Send(to, subject, body string) error {
-	auth := smtp.PlainAuth("", s.user, s.password, s.host)
+	payload, _ := json.Marshal(map[string]any{
+		"from":    fmt.Sprintf("USP Store <%s>", s.from),
+		"to":      []string{to},
+		"subject": subject,
+		"html":    body,
+	})
 
-	msg := fmt.Sprintf(
-		"From: USP Store <%s>\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s",
-		s.user, to, subject, body,
-	)
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
 
-	return smtp.SendMail(
-		fmt.Sprintf("%s:%s", s.host, s.port),
-		auth,
-		s.user,
-		[]string{to},
-		[]byte(msg),
-	)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend API error: status %d", resp.StatusCode)
+	}
+	return nil
 }
 
 func (s *Sender) SendVerification(to, name, token, appURL string) error {

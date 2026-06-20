@@ -12,10 +12,8 @@ type Config struct {
 	DBName       string
 	JWTSecret    string
 	Port         string
-	SMTPHost     string
-	SMTPPort     string
 	SMTPUser     string
-	SMTPPassword string
+	ResendAPIKey string
 	AppURL       string
 }
 
@@ -29,10 +27,8 @@ func Load() *Config {
 		DBName:       getEnv("DB_NAME", "uspshop"),
 		JWTSecret:    getEnv("JWT_SECRET", "secret"),
 		Port:         getEnv("PORT", "8080"),
-		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
-		SMTPPort:     getEnv("SMTP_PORT", "587"),
 		SMTPUser:     getEnv("SMTP_USER", ""),
-		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
 		AppURL:       getEnv("APP_URL", "http://localhost:3000"),
 	}
 }

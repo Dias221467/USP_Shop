@@ -34,7 +34,7 @@ func main() {
 	orderRepo := repository.NewOrderRepository(db)
 
 	// Email sender
-	mailer := email.NewSender(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUser, cfg.SMTPPassword)
+	mailer := email.NewSender(cfg.ResendAPIKey, cfg.SMTPUser)
 
 	// Services
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, mailer, cfg.AppURL)
