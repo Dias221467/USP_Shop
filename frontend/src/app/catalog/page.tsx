@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -27,7 +27,7 @@ const FILTERS = [
   { label: 'Одежда', value: 'clothing' },
 ];
 
-export default function CatalogPage() {
+function CatalogContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category') || '';
 
@@ -174,5 +174,13 @@ export default function CatalogPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center"><div className="w-8 h-8 border-2 border-black/20 border-t-black rounded-full animate-spin" /></div>}>
+      <CatalogContent />
+    </Suspense>
   );
 }
