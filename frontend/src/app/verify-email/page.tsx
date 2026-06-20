@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import api from '@/lib/api';
 
 type Status = 'loading' | 'success' | 'error';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [status, setStatus] = useState<Status>('loading');
@@ -77,5 +77,13 @@ export default function VerifyEmailPage() {
         )}
       </motion.div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-white" />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
