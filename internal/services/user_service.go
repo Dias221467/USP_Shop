@@ -11,6 +11,7 @@ import (
 	"github.com/Dias221467/USPShop/internal/repository"
 	jwtutil "github.com/Dias221467/USPShop/pkg/jwt"
 	"github.com/Dias221467/USPShop/pkg/email"
+	"github.com/Dias221467/USPShop/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -69,7 +70,11 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	}
 
 	// Отправляем письмо асинхронно, не блокируем ответ
-	go s.mailer.SendVerification(user.Email, user.Name, verToken, s.appURL)
+	go func() {
+		if err := s.mailer.SendVerification(user.Email, user.Name, verToken, s.appURL); err != nil {
+			logger.Log.Errorf("SendVerification failed: %v", err)
+		}
+	}()
 
 	token, err := jwtutil.GenerateToken(user.ID.Hex(), string(user.Role), s.jwtSecret, user.TokenVersion)
 	if err != nil {
@@ -131,7 +136,11 @@ func (s *UserService) ResendVerification(ctx context.Context, emailAddr string) 
 		return err
 	}
 
-	go s.mailer.SendVerification(user.Email, user.Name, token, s.appURL)
+	go func() {
+		if err := s.mailer.SendVerification(user.Email, user.Name, token, s.appURL); err != nil {
+			logger.Log.Errorf("ResendVerification failed: %v", err)
+		}
+	}()
 	return nil
 }
 
@@ -162,7 +171,11 @@ func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
 		return err
 	}
 
-	go s.mailer.SendPasswordReset(user.Email, user.Name, token, s.appURL)
+	go func() {
+		if err := s.mailer.SendPasswordReset(user.Email, user.Name, token, s.appURL); err != nil {
+			logger.Log.Errorf("SendPasswordReset failed: %v", err)
+		}
+	}()
 	return nil
 }
 
