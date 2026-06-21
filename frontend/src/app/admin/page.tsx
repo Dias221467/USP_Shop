@@ -59,12 +59,12 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pRes, oRes] = await Promise.all([
+      const [pRes, oRes] = await Promise.allSettled([
         api.get('/api/products'),
         api.get('/api/admin/orders'),
       ]);
-      setProducts(pRes.data || []);
-      setOrders(oRes.data || []);
+      setProducts(pRes.status === 'fulfilled' ? pRes.value.data || [] : []);
+      setOrders(oRes.status === 'fulfilled' ? oRes.value.data || [] : []);
     } finally {
       setLoading(false);
     }
