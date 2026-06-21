@@ -238,6 +238,14 @@ export default function AdminPage() {
                       <p className="text-xs text-black/40 mt-0.5">
                         {new Date(order.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
+                      {order.customer_name && (
+                        <p className="text-xs text-black/70 mt-1 font-medium">{order.customer_name}</p>
+                      )}
+                      {order.customer_phone && (
+                        <a href={`tel:${order.customer_phone}`} className="text-xs text-blue-500 hover:underline mt-0.5 block">
+                          {order.customer_phone}
+                        </a>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-base font-medium">₸{order.total?.toLocaleString()}</span>

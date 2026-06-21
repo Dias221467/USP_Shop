@@ -13,10 +13,11 @@ import (
 type OrderService struct {
 	orderRepo *repository.OrderRepository
 	cartRepo  *repository.CartRepository
+	userRepo  *repository.UserRepository
 }
 
-func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository) *OrderService {
-	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo}
+func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository) *OrderService {
+	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo}
 }
 
 func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req models.CreateOrderRequest) (*models.Order, error) {
@@ -81,6 +82,11 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 		Status:          models.OrderStatusPending,
 		ShippingAddress: req.ShippingAddress,
 		PaymentMethod:   req.PaymentMethod,
+	}
+
+	if user, err := s.userRepo.GetByID(ctx, userID); err == nil {
+		order.CustomerName = user.Name
+		order.CustomerPhone = user.Phone
 	}
 
 	if err := s.orderRepo.Create(ctx, order); err != nil {

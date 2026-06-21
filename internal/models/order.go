@@ -37,6 +37,8 @@ type OrderItem struct {
 type Order struct {
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	UserID          primitive.ObjectID `bson:"user_id" json:"user_id"`
+	CustomerName    string             `bson:"customer_name" json:"customer_name"`
+	CustomerPhone   string             `bson:"customer_phone" json:"customer_phone"`
 	Items           []OrderItem        `bson:"items" json:"items"`
 	Total           float64            `bson:"total" json:"total"`
 	Status          OrderStatus        `bson:"status" json:"status"`

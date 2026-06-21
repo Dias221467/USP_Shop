@@ -40,7 +40,7 @@ func main() {
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, mailer, cfg.AppURL)
 	productService := services.NewProductService(productRepo)
 	cartService := services.NewCartService(cartRepo, productRepo)
-	orderService := services.NewOrderService(orderRepo, cartRepo)
+	orderService := services.NewOrderService(orderRepo, cartRepo, userRepo)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userService)
