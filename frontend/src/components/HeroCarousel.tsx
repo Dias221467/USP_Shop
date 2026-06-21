@@ -61,16 +61,22 @@ export function HeroCarousel() {
           </motion.div>
         </AnimatePresence>
 
-        <AnimatePresence mode="wait" initial={false}>
+        {/* Preload all images */}
+        <div className="hidden">
+          {slides.map((s) => <img key={s.id} src={s.image} alt="" />)}
+        </div>
+
+        <AnimatePresence mode="sync" initial={false}>
           <motion.div
             key={`img-${slide.id}`}
             initial={{ x: direction * 300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: direction * -300, opacity: 0 }}
-            transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1] }}
+            transition={{ duration: 0.55, ease: [0.65, 0, 0.35, 1] }}
             className="w-full max-w-xl md:max-w-2xl px-10 md:px-16 relative z-10"
+            style={{ willChange: 'transform' }}
           >
-            <img src={slide.image} alt={slide.model} className="w-full h-auto object-contain" />
+            <img src={slide.image} alt={slide.model} className="w-full h-auto object-contain" loading="eager" />
           </motion.div>
         </AnimatePresence>
 
