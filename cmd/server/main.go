@@ -47,7 +47,7 @@ func main() {
 	productHandler := handlers.NewProductHandler(productService)
 	cartHandler := handlers.NewCartHandler(cartService)
 	orderHandler := handlers.NewOrderHandler(orderService)
-	uploadHandler := handlers.NewUploadHandler()
+	uploadHandler := handlers.NewUploadHandler(cfg.CloudinaryCloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret)
 	supportHandler := handlers.NewSupportHandler()
 
 	r := mux.NewRouter()

@@ -6,10 +6,14 @@ import (
 	"github.com/Dias221467/USPShop/pkg/upload"
 )
 
-type UploadHandler struct{}
+type UploadHandler struct {
+	cloudName   string
+	apiKey      string
+	apiSecret   string
+}
 
-func NewUploadHandler() *UploadHandler {
-	return &UploadHandler{}
+func NewUploadHandler(cloudName, apiKey, apiSecret string) *UploadHandler {
+	return &UploadHandler{cloudName: cloudName, apiKey: apiKey, apiSecret: apiSecret}
 }
 
 // POST /api/admin/upload
@@ -28,7 +32,8 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	url, err := upload.SaveImage(file, header)
+	url, err := upload.SaveImage(file, header, h.cloudName, h.apiKey, h.apiSecret)
+
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
