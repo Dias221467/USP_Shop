@@ -52,6 +52,22 @@ function LoginContent() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [regForm, setRegForm] = useState({ name: '', email: '', phone: '', password: '' });
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    const d = digits.startsWith('8') ? '7' + digits.slice(1) : digits;
+    if (d.length === 0) return '';
+    if (d.length <= 1) return '+' + d;
+    if (d.length <= 4) return `+${d[0]} (${d.slice(1)}`;
+    if (d.length <= 7) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4)}`;
+    if (d.length <= 9) return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+    return `+${d[0]} (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7, 9)}-${d.slice(9, 11)}`;
+  };
+
+  const isValidPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length === 11 && (digits.startsWith('7') || digits.startsWith('8'));
+  };
+
   useEffect(() => {
     if (localStorage.getItem('token')) router.push(redirect);
   }, []);
@@ -81,6 +97,10 @@ function LoginContent() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!isValidPhone(regForm.phone)) {
+      setError('Введите корректный номер телефона: +7 (XXX) XXX-XX-XX');
+      return;
+    }
     setLoading(true);
     try {
       await api.post('/api/auth/register', regForm);
@@ -292,8 +312,8 @@ function LoginContent() {
                     value={regForm.email} onChange={(v) => setRegForm({ ...regForm, email: v })}
                   />
                   <Field
-                    label="Телефон" type="tel" placeholder="+7 777 000 00 00"
-                    value={regForm.phone} onChange={(v) => setRegForm({ ...regForm, phone: v })}
+                    label="Телефон" type="tel" placeholder="+7 (777) 000-00-00"
+                    value={regForm.phone} onChange={(v) => setRegForm({ ...regForm, phone: formatPhone(v) })}
                   />
                   <Field
                     label="Пароль" type={showPwd ? 'text' : 'password'} placeholder="Минимум 6 символов"
