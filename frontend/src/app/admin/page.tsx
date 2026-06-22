@@ -62,6 +62,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -79,6 +80,7 @@ export default function AdminPage() {
       const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
       if (payload.role !== 'admin') { router.push('/'); return; }
     } catch { router.push('/'); return; }
+    setAuthed(true);
     loadData();
   }, []);
 
@@ -169,6 +171,8 @@ export default function AdminPage() {
     await api.patch(`/api/admin/orders/${id}/status`, { status });
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status } : o));
   };
+
+  if (!authed) return null;
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
