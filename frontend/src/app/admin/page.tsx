@@ -98,6 +98,16 @@ export default function AdminPage() {
     setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
+  const moveImage = (idx: number, dir: -1 | 1) => {
+    setForm((f) => {
+      const imgs = [...f.images];
+      const target = idx + dir;
+      if (target < 0 || target >= imgs.length) return f;
+      [imgs[idx], imgs[target]] = [imgs[target], imgs[idx]];
+      return { ...f, images: imgs };
+    });
+  };
+
   const saveProduct = async () => {
     if (!form.name || !form.brand || !form.price) return;
     setSaving(true);
@@ -326,6 +336,14 @@ export default function AdminPage() {
                         >
                           <X className="w-3 h-3 text-white" />
                         </button>
+                        <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+                          {i > 0 && (
+                            <button onClick={() => moveImage(i, -1)} className="w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px]">←</button>
+                          )}
+                          {i < form.images.length - 1 && (
+                            <button onClick={() => moveImage(i, 1)} className="w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px]">→</button>
+                          )}
+                        </div>
                       </div>
                     ))}
                     <button
