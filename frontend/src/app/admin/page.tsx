@@ -6,6 +6,31 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import api from '@/lib/api';
 import { Product } from '@/types';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableImage({ id, src, onRemove }: { id: string; src: string; onRemove: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f5] cursor-grab active:cursor-grabbing"
+      {...attributes}
+      {...listeners}
+    >
+      <img src={src} alt="" className="w-full h-full object-contain p-1 pointer-events-none" />
+      <button
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={onRemove}
+        className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center z-10"
+      >
+        <X className="w-3 h-3 text-white" />
+      </button>
+    </div>
+  );
+}
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -45,6 +70,7 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -98,14 +124,15 @@ export default function AdminPage() {
     setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
-  const moveImage = (idx: number, dir: -1 | 1) => {
-    setForm((f) => {
-      const imgs = [...f.images];
-      const target = idx + dir;
-      if (target < 0 || target >= imgs.length) return f;
-      [imgs[idx], imgs[target]] = [imgs[target], imgs[idx]];
-      return { ...f, images: imgs };
-    });
+  const handleImageDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setForm((f) => {
+        const oldIndex = f.images.indexOf(active.id as string);
+        const newIndex = f.images.indexOf(over.id as string);
+        return { ...f, images: arrayMove(f.images, oldIndex, newIndex) };
+      });
+    }
   };
 
   const saveProduct = async () => {
@@ -323,29 +350,18 @@ export default function AdminPage() {
                 <div>
                   <p className="text-xs uppercase tracking-widest text-black/40 mb-2">Фото</p>
                   <div className="flex gap-2 flex-wrap">
-                    {form.images.map((img, i) => (
-                      <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f5]">
-                        <img
-                          src={img.startsWith('http') ? img : `${API_URL}${img}`}
-                          alt=""
-                          className="w-full h-full object-contain p-1"
-                        />
-                        <button
-                          onClick={() => removeImage(i)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center"
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </button>
-                        <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
-                          {i > 0 && (
-                            <button onClick={() => moveImage(i, -1)} className="w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px]">←</button>
-                          )}
-                          {i < form.images.length - 1 && (
-                            <button onClick={() => moveImage(i, 1)} className="w-5 h-5 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px]">→</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleImageDragEnd}>
+                      <SortableContext items={form.images} strategy={horizontalListSortingStrategy}>
+                        {form.images.map((img, i) => (
+                          <SortableImage
+                            key={img}
+                            id={img}
+                            src={img.startsWith('http') ? img : `${API_URL}${img}`}
+                            onRemove={() => removeImage(i)}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
                     <button
                       onClick={() => fileRef.current?.click()}
                       disabled={uploading}
