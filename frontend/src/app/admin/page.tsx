@@ -117,8 +117,11 @@ export default function AdminPage() {
       fd.append('image', file);
       const res = await api.post('/api/admin/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       setForm((f) => ({ ...f, images: [...f.images, res.data.url] }));
+    } catch {
+      alert('Ошибка загрузки фото. Попробуй ещё раз.');
     } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
