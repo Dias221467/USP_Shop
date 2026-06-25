@@ -60,6 +60,7 @@ const EMPTY_FORM = {
 export default function AdminPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('products');
+  const [productCat, setProductCat] = useState<'shoes' | 'clothing'>('shoes');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [authed, setAuthed] = useState(false);
@@ -270,21 +271,21 @@ export default function AdminPage() {
             </div>
           ) : tab === 'products' ? (
             /* ── Товары ── */
-            <div className="flex flex-col gap-6">
-              {['shoes', 'clothing'].map((cat) => {
-                const catProducts = products.filter(p => p.category === cat);
-                const catLabel = cat === 'shoes' ? 'Обувь' : 'Одежда';
-                return (
-                  <div key={cat}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-sm uppercase tracking-widest text-black/40">{catLabel}</h3>
-                      <span className="text-xs text-black/30">{catProducts.length}</span>
-                    </div>
-                    {catProducts.length === 0 ? (
-                      <div className="text-center py-8 text-black/20 text-sm border border-dashed border-black/10 rounded-2xl">Нет товаров</div>
-                    ) : (
-                      <div className="flex flex-col gap-3">
-                        {catProducts.map((p) => {
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2">
+                {([['shoes', 'Обувь'], ['clothing', 'Одежда']] as const).map(([cat, label]) => (
+                  <button key={cat} onClick={() => setProductCat(cat)}
+                    className={`px-5 py-2 rounded-xl text-sm transition-colors ${productCat === cat ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'}`}>
+                    {label} <span className="opacity-50 ml-1">{products.filter(p => p.category === cat).length}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-col gap-3">
+                {products.filter(p => p.category === productCat).length === 0 ? (
+                  <div className="text-center py-16 text-black/20 text-sm border border-dashed border-black/10 rounded-2xl">Нет товаров</div>
+                ) : (
+                  <>
+                    {products.filter(p => p.category === productCat).map((p) => {
                 const img = p.images?.[0]
                   ? p.images[0].startsWith('http') ? p.images[0] : `${API_URL}${p.images[0]}`
                   : null;
@@ -325,11 +326,9 @@ export default function AdminPage() {
                   </div>
                 );
               })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             /* ── Заказы ── */
