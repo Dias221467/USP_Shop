@@ -270,11 +270,21 @@ export default function AdminPage() {
             </div>
           ) : tab === 'products' ? (
             /* ── Товары ── */
-            <div className="flex flex-col gap-3">
-              {products.length === 0 && (
-                <div className="text-center py-20 text-black/30">Товаров пока нет</div>
-              )}
-              {products.map((p) => {
+            <div className="flex flex-col gap-6">
+              {['shoes', 'clothing'].map((cat) => {
+                const catProducts = products.filter(p => p.category === cat);
+                const catLabel = cat === 'shoes' ? 'Обувь' : 'Одежда';
+                return (
+                  <div key={cat}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-sm uppercase tracking-widest text-black/40">{catLabel}</h3>
+                      <span className="text-xs text-black/30">{catProducts.length}</span>
+                    </div>
+                    {catProducts.length === 0 ? (
+                      <div className="text-center py-8 text-black/20 text-sm border border-dashed border-black/10 rounded-2xl">Нет товаров</div>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        {catProducts.map((p) => {
                 const img = p.images?.[0]
                   ? p.images[0].startsWith('http') ? p.images[0] : `${API_URL}${p.images[0]}`
                   : null;
@@ -312,6 +322,11 @@ export default function AdminPage() {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
+                  </div>
+                );
+              })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
