@@ -43,9 +43,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cart.items[existing].quantity += 1;
       cart.items[existing].subtotal = cart.items[existing].quantity * product.price;
     } else {
-      const imageUrl = product.images?.[0]
-        ? product.images[0].startsWith('http') ? product.images[0] : `${API_URL}${product.images[0]}`
-        : '';
+      const imageUrl = images[activeImage] || images[0] || '';
       cart.items.push({
         product_id: product.id,
         name: product.name,
@@ -165,10 +163,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <div className="mb-8">
                     <p className="text-xs  uppercase tracking-widest mb-3">Цвет — {selectedColor}</p>
                     <div className="flex gap-2">
-                      {product.colors.map((color) => (
+                      {product.colors.map((color, i) => (
                         <button
                           key={color}
-                          onClick={() => setSelectedColor(color)}
+                          onClick={() => { setSelectedColor(color); if (i < images.length) setActiveImage(i); }}
                           className={`px-4 py-2 rounded-full text-sm border transition-all ${
                             selectedColor === color
                               ? 'border-black bg-black text-white'

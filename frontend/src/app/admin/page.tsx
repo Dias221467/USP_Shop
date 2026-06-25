@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [clothingSizeType, setClothingSizeType] = useState<'letter' | 'num'>('letter');
   const [importPreview, setImportPreview] = useState<any[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -486,23 +487,37 @@ export default function AdminPage() {
                   </div>
                   <div className="col-span-2">
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Размеры (через запятую)</label>
-                    {form.category === 'clothing' && (
-                      <div className="flex gap-1.5 flex-wrap mb-2">
-                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((s) => {
-                          const active = form.sizes.split(',').map(x => x.trim()).includes(s);
-                          return (
-                            <button key={s} type="button"
-                              onClick={() => {
-                                const current = form.sizes.split(',').map(x => x.trim()).filter(Boolean);
-                                const next = active ? current.filter(x => x !== s) : [...current, s];
-                                setForm({ ...form, sizes: next.join(', ') });
-                              }}
-                              className={`px-3 py-1 rounded-lg text-xs border transition-colors ${active ? 'bg-black text-white border-black' : 'border-black/15 hover:border-black/40'}`}
-                            >{s}</button>
-                          );
-                        })}
-                      </div>
-                    )}
+                    {form.category === 'clothing' && (() => {
+                      const buttons = clothingSizeType === 'letter'
+                        ? ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+                        : ['42', '44', '46', '48', '50', '52', '54'];
+                      const activeSizes = form.sizes.split(',').map(x => x.trim()).filter(Boolean);
+                      const toggleSize = (s: string) => {
+                        const next = activeSizes.includes(s) ? activeSizes.filter(x => x !== s) : [...activeSizes, s];
+                        setForm(f => ({ ...f, sizes: next.join(', ') }));
+                      };
+                      return (
+                        <div className="mb-2">
+                          <div className="flex gap-1.5 mb-2">
+                            {(['letter', 'num'] as const).map((t) => (
+                              <button key={t} type="button"
+                                onClick={() => { setClothingSizeType(t); setForm(f => ({ ...f, sizes: '' })); }}
+                                className={`px-3 py-1 rounded-lg text-xs border transition-colors ${clothingSizeType === t ? 'bg-black text-white border-black' : 'border-black/15 hover:border-black/40'}`}>
+                                {t === 'letter' ? 'S / M / L' : '42 / 44 / 46'}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {buttons.map((s) => (
+                              <button key={s} type="button" onClick={() => toggleSize(s)}
+                                className={`px-3 py-1 rounded-lg text-xs border transition-colors ${activeSizes.includes(s) ? 'bg-black text-white border-black' : 'border-black/15 hover:border-black/40'}`}>
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })}
                       placeholder={form.category === 'clothing' ? 'XS, S, M, L, XL, XXL' : '39, 40, 41, 42, 43'}
                       className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
