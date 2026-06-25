@@ -48,6 +48,7 @@ func main() {
 	cartHandler := handlers.NewCartHandler(cartService)
 	orderHandler := handlers.NewOrderHandler(orderService)
 	uploadHandler := handlers.NewUploadHandler(cfg.CloudinaryCloudName, cfg.CloudinaryAPIKey, cfg.CloudinaryAPISecret)
+	importHandler := handlers.NewImportHandler(productRepo)
 	supportHandler := handlers.NewSupportHandler()
 
 	r := mux.NewRouter()
@@ -105,6 +106,8 @@ func main() {
 	admin.HandleFunc("/orders", orderHandler.GetAll).Methods("GET")
 	admin.HandleFunc("/orders/{id}/status", orderHandler.UpdateStatus).Methods("PATCH")
 	admin.HandleFunc("/upload", uploadHandler.UploadImage).Methods("POST")
+	admin.HandleFunc("/import/preview", importHandler.Preview).Methods("POST")
+	admin.HandleFunc("/import/apply", importHandler.Apply).Methods("POST")
 
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},

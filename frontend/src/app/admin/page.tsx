@@ -70,7 +70,11 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [importPreview, setImportPreview] = useState<any[] | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [applying, setApplying] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const importRef = useRef<HTMLInputElement>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
@@ -140,6 +144,39 @@ export default function AdminPage() {
     }
   };
 
+  const handleImportFile = async (file: File) => {
+    setImporting(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await api.post('/api/admin/import/preview', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setImportPreview(res.data || []);
+    } catch (e: any) {
+      alert('Ошибка: ' + (e?.response?.data || e?.message || 'неизвестная ошибка'));
+    } finally {
+      setImporting(false);
+      if (importRef.current) importRef.current.value = '';
+    }
+  };
+
+  const applyImport = async () => {
+    if (!importPreview) return;
+    setApplying(true);
+    const items = importPreview
+      .filter((p) => p.matched_id)
+      .map((p) => ({ product_id: p.matched_id, sizes: p.sizes, total_stock: p.total_stock }));
+    try {
+      const res = await api.post('/api/admin/import/apply', { items });
+      alert(`Обновлено товаров: ${res.data.updated}`);
+      setImportPreview(null);
+      loadData();
+    } catch (e: any) {
+      alert('Ошибка применения: ' + (e?.message || 'неизвестная ошибка'));
+    } finally {
+      setApplying(false);
+    }
+  };
+
   const saveProduct = async () => {
     if (!form.name || !form.brand || !form.price) return;
     setSaving(true);
@@ -186,14 +223,25 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-8 gap-4">
             <h1 className="text-2xl md:text-4xl font-light">Панель управления</h1>
             {tab === 'products' && (
-              <button
-                onClick={openAdd}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-xl text-sm hover:bg-black/80 transition-colors flex-shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Добавить товар</span>
-                <span className="sm:hidden">Добавить</span>
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => importRef.current?.click()}
+                  disabled={importing}
+                  className="flex items-center gap-2 border border-black/20 px-4 py-2.5 rounded-xl text-sm hover:bg-black/5 transition-colors"
+                >
+                  {importing ? <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" /> : <Upload className="w-4 h-4" />}
+                  <span className="hidden sm:inline">Импорт Excel</span>
+                </button>
+                <input ref={importRef} type="file" accept=".xlsx" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleImportFile(e.target.files[0]); }} />
+                <button
+                  onClick={openAdd}
+                  className="flex items-center gap-2 bg-black text-white px-4 py-2.5 rounded-xl text-sm hover:bg-black/80 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Добавить товар</span>
+                  <span className="sm:hidden">Добавить</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -479,6 +527,55 @@ export default function AdminPage() {
                 <button onClick={() => deleteProduct(deleteId)}
                   className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm hover:bg-red-600 transition-colors">
                   Удалить
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Import Preview Modal */}
+      <AnimatePresence>
+        {importPreview && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-black/8">
+                <div>
+                  <h2 className="text-lg font-light">Импорт из Excel</h2>
+                  <p className="text-xs text-black/40 mt-1">
+                    Совпало: {importPreview.filter(p => p.matched_id).length} / {importPreview.length}
+                  </p>
+                </div>
+                <button onClick={() => setImportPreview(null)} className="p-1 hover:opacity-50"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="overflow-y-auto flex-1 p-4 space-y-2">
+                {importPreview.map((item, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-xl text-sm ${item.matched_id ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${item.matched_id ? 'bg-green-500' : 'bg-red-400'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-black/50 text-xs truncate">{item.excel_name}</p>
+                      {item.matched_id
+                        ? <p className="font-light truncate">→ {item.matched_name} <span className="text-black/40">({item.total_stock} шт, р: {item.sizes?.join(', ')})</span></p>
+                        : <p className="text-red-500 text-xs">Не найдено в базе</p>
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 border-t border-black/8 flex gap-3">
+                <button onClick={() => setImportPreview(null)} className="flex-1 py-2.5 border border-black/15 rounded-xl text-sm hover:bg-black/5">Отмена</button>
+                <button
+                  onClick={applyImport}
+                  disabled={applying || importPreview.filter(p => p.matched_id).length === 0}
+                  className="flex-1 py-2.5 bg-black text-white rounded-xl text-sm hover:bg-black/80 disabled:opacity-40"
+                >
+                  {applying ? 'Применяю...' : `Применить (${importPreview.filter(p => p.matched_id).length})`}
                 </button>
               </div>
             </motion.div>

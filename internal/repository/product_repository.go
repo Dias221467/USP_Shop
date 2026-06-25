@@ -104,6 +104,19 @@ func (r *ProductRepository) Patch(ctx context.Context, id string, fields bson.M)
 	return nil
 }
 
+func (r *ProductRepository) UpdateStock(ctx context.Context, id string, sizes []string, stock int) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": bson.M{
+		"sizes":      sizes,
+		"stock":      stock,
+		"updated_at": time.Now(),
+	}})
+	return err
+}
+
 func (r *ProductRepository) Delete(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
