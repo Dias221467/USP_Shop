@@ -14,6 +14,7 @@ interface CartItem {
   size: string;
   color: string;
   quantity: number;
+  max_qty?: number;
   image: string;
   subtotal: number;
 }
@@ -36,7 +37,9 @@ export default function CartPage() {
 
   const updateQty = (index: number, delta: number) => {
     const updated = { ...cart };
-    updated.items[index].quantity = Math.max(1, updated.items[index].quantity + delta);
+    const item = updated.items[index];
+    const max = item.max_qty ?? Infinity;
+    updated.items[index].quantity = Math.min(max, Math.max(1, item.quantity + delta));
     updated.items[index].subtotal = updated.items[index].quantity * updated.items[index].price;
     updated.total = updated.items.reduce((s, i) => s + i.subtotal, 0);
     setCart(updated);

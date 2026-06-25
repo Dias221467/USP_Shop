@@ -11,13 +11,14 @@ import (
 )
 
 type OrderService struct {
-	orderRepo *repository.OrderRepository
-	cartRepo  *repository.CartRepository
-	userRepo  *repository.UserRepository
+	orderRepo   *repository.OrderRepository
+	cartRepo    *repository.CartRepository
+	userRepo    *repository.UserRepository
+	productRepo *repository.ProductRepository
 }
 
-func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository) *OrderService {
-	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo}
+func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository, productRepo *repository.ProductRepository) *OrderService {
+	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo}
 }
 
 func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req models.CreateOrderRequest) (*models.Order, error) {
@@ -91,6 +92,10 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 
 	if err := s.orderRepo.Create(ctx, order); err != nil {
 		return nil, err
+	}
+
+	for _, item := range items {
+		_ = s.productRepo.DecrementSizeStock(ctx, item.ProductID.Hex(), item.Size, item.Quantity)
 	}
 
 	return order, nil

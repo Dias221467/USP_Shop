@@ -50,6 +50,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cart.items[existing].subtotal = cart.items[existing].quantity * product.price;
     } else {
       const imageUrl = images[activeImage] || images[0] || '';
+      const sizeMax = product.size_stock?.[selectedSize];
       cart.items.push({
         product_id: product.id,
         name: product.name,
@@ -58,6 +59,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         color: selectedColor,
         quantity: 1,
         image: imageUrl,
+        max_qty: sizeMax ?? undefined,
         subtotal: product.price,
       });
     }

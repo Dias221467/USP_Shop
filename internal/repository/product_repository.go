@@ -134,6 +134,48 @@ func (r *ProductRepository) UpdateStock(ctx context.Context, id string, sizeStoc
 	return err
 }
 
+func (r *ProductRepository) DecrementSizeStock(ctx context.Context, id string, size string, qty int) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	p, err := r.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if p.SizeStock == nil {
+		p.SizeStock = map[string]int{}
+	}
+	p.SizeStock[size] -= qty
+	if p.SizeStock[size] < 0 {
+		p.SizeStock[size] = 0
+	}
+
+	newSizes := []string{}
+	total := 0
+	for s, q := range p.SizeStock {
+		if q > 0 {
+			newSizes = append(newSizes, s)
+			total += q
+		}
+	}
+	sort.Slice(newSizes, func(i, j int) bool {
+		a, _ := strconv.Atoi(newSizes[i])
+		b, _ := strconv.Atoi(newSizes[j])
+		return a < b
+	})
+
+	fields := bson.M{
+		"size_stock": p.SizeStock,
+		"sizes":      newSizes,
+		"stock":      total,
+		"updated_at": time.Now(),
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": fields})
+	return err
+}
+
 func (r *ProductRepository) Delete(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
