@@ -110,8 +110,8 @@ export default function AdminPage() {
     setForm({
       name: p.name, brand: p.brand, description: p.description,
       price: String(p.price), category: p.category,
-      sizes: p.sizes.join(', '), colors: p.colors.join(', '),
-      stock: String(p.stock), images: [...p.images],
+      sizes: (p.sizes || []).join(', '), colors: (p.colors || []).join(', '),
+      stock: String(p.stock), images: [...(p.images || [])],
     });
     setShowModal(true);
   };
@@ -489,7 +489,7 @@ export default function AdminPage() {
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Размеры (через запятую)</label>
                     {form.category === 'clothing' && (() => {
                       const buttons = clothingSizeType === 'letter'
-                        ? ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+                        ? ['XS', 'S', 'M', 'L', 'XL', '2XL']
                         : ['42', '44', '46', '48', '50', '52', '54'];
                       const activeSizes = form.sizes.split(',').map(x => x.trim()).filter(Boolean);
                       const toggleSize = (s: string) => {
@@ -519,7 +519,7 @@ export default function AdminPage() {
                       );
                     })()}
                     <input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                      placeholder={form.category === 'clothing' ? 'XS, S, M, L, XL, XXL' : '39, 40, 41, 42, 43'}
+                      placeholder={form.category === 'clothing' ? 'XS, S, M, L, XL, 2XL' : '39, 40, 41, 42, 43'}
                       className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
                   </div>
                   <div className="col-span-2">
