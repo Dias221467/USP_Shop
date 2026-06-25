@@ -93,7 +93,7 @@ function CatalogContent() {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] rounded-3xl bg-black/5 animate-pulse" />
+                <div key={i} className="aspect-[4/5] rounded-3xl bg-black/4 border border-black/5 animate-pulse" />
               ))}
             </div>
           ) : products.length === 0 ? (
@@ -120,8 +120,8 @@ function CatalogContent() {
                       className="group cursor-pointer"
                     >
                       <motion.div
-                        className="aspect-[4/5] rounded-3xl overflow-hidden bg-[#f5f5f5] relative"
-                        animate={{ scale: hoveredId === product.id ? 0.98 : 1 }}
+                        className="aspect-[4/5] rounded-3xl overflow-hidden bg-white border border-black/8 relative"
+                        animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
                         transition={{ duration: 0.4 }}
                       >
                         <motion.div

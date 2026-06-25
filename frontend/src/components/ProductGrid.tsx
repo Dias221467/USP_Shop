@@ -28,8 +28,6 @@ export function ProductGrid() {
     }).catch(() => setProducts(MOCK));
   }, []);
 
-  const bgColors = ['#f0f0f0', '#fafafa', '#f8f8f8', '#2a2a2a', '#e8e8e8', '#f5f5f5'];
-
   return (
     <section className="py-20 md:py-32 px-6 md:px-8 bg-white">
       <div className="max-w-[1600px] mx-auto">
@@ -48,8 +46,6 @@ export function ProductGrid() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product, index) => {
-            const bg = bgColors[index % bgColors.length];
-            const isDark = bg === '#2a2a2a';
             const imageUrl = product.images?.[0]
               ? product.images[0].startsWith('http')
                 ? product.images[0]
@@ -68,8 +64,8 @@ export function ProductGrid() {
                   className="group cursor-pointer"
                 >
                   <motion.div
-                    className="aspect-[4/5] rounded-3xl overflow-hidden relative"
-                    animate={{ backgroundColor: bg, scale: hoveredId === product.id ? 0.98 : 1 }}
+                    className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8"
+                    animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
                     transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
                   >
                     <motion.div
