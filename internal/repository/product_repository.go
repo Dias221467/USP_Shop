@@ -134,7 +134,50 @@ func (r *ProductRepository) UpdateStock(ctx context.Context, id string, sizeStoc
 	return err
 }
 
-func (r *ProductRepository) DecrementSizeStock(ctx context.Context, id string, size string, qty int) error {
+var clothingSizeOrder = map[string]int{"XS": 0, "S": 1, "M": 2, "L": 3, "XL": 4, "2XL": 5, "3XL": 6}
+
+func sortClothingSizes(sizes []string) {
+	sort.Slice(sizes, func(i, j int) bool {
+		oi, iok := clothingSizeOrder[sizes[i]]
+		oj, jok := clothingSizeOrder[sizes[j]]
+		if iok && jok {
+			return oi < oj
+		}
+		return sizes[i] < sizes[j]
+	})
+}
+
+func (r *ProductRepository) UpdateColorStock(ctx context.Context, id string, colorStock map[string]map[string]int) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	sizesSet := map[string]bool{}
+	total := 0
+	for _, ss := range colorStock {
+		for size, qty := range ss {
+			if qty > 0 {
+				sizesSet[size] = true
+				total += qty
+			}
+		}
+	}
+	sizes := []string{}
+	for s := range sizesSet {
+		sizes = append(sizes, s)
+	}
+	sortClothingSizes(sizes)
+	fields := bson.M{
+		"color_stock": colorStock,
+		"sizes":       sizes,
+		"stock":       total,
+		"updated_at":  time.Now(),
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": fields})
+	return err
+}
+
+func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color string, size string, qty int) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
@@ -144,34 +187,62 @@ func (r *ProductRepository) DecrementSizeStock(ctx context.Context, id string, s
 		return err
 	}
 
-	if p.SizeStock == nil {
-		p.SizeStock = map[string]int{}
-	}
-	p.SizeStock[size] -= qty
-	if p.SizeStock[size] < 0 {
-		p.SizeStock[size] = 0
-	}
+	var fields bson.M
 
-	newSizes := []string{}
-	total := 0
-	for s, q := range p.SizeStock {
-		if q > 0 {
-			newSizes = append(newSizes, s)
-			total += q
+	if len(p.ColorStock) > 0 && color != "" {
+		if p.ColorStock[color] == nil {
+			return nil
 		}
+		p.ColorStock[color][size] -= qty
+		if p.ColorStock[color][size] < 0 {
+			p.ColorStock[color][size] = 0
+		}
+		sizesSet := map[string]bool{}
+		total := 0
+		for _, ss := range p.ColorStock {
+			for s, q := range ss {
+				if q > 0 {
+					sizesSet[s] = true
+					total += q
+				}
+			}
+		}
+		newSizes := []string{}
+		for s := range sizesSet {
+			newSizes = append(newSizes, s)
+		}
+		sortClothingSizes(newSizes)
+		fields = bson.M{"color_stock": p.ColorStock, "sizes": newSizes, "stock": total, "updated_at": time.Now()}
+	} else if len(p.SizeStock) > 0 {
+		if p.SizeStock == nil {
+			p.SizeStock = map[string]int{}
+		}
+		p.SizeStock[size] -= qty
+		if p.SizeStock[size] < 0 {
+			p.SizeStock[size] = 0
+		}
+		newSizes := []string{}
+		total := 0
+		for s, q := range p.SizeStock {
+			if q > 0 {
+				newSizes = append(newSizes, s)
+				total += q
+			}
+		}
+		sort.Slice(newSizes, func(i, j int) bool {
+			a, _ := strconv.Atoi(newSizes[i])
+			b, _ := strconv.Atoi(newSizes[j])
+			return a < b
+		})
+		fields = bson.M{"size_stock": p.SizeStock, "sizes": newSizes, "stock": total, "updated_at": time.Now()}
+	} else {
+		newStock := p.Stock - qty
+		if newStock < 0 {
+			newStock = 0
+		}
+		fields = bson.M{"stock": newStock, "updated_at": time.Now()}
 	}
-	sort.Slice(newSizes, func(i, j int) bool {
-		a, _ := strconv.Atoi(newSizes[i])
-		b, _ := strconv.Atoi(newSizes[j])
-		return a < b
-	})
 
-	fields := bson.M{
-		"size_stock": p.SizeStock,
-		"sizes":      newSizes,
-		"stock":      total,
-		"updated_at": time.Now(),
-	}
 	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": fields})
 	return err
 }

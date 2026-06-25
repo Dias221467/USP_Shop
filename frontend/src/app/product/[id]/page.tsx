@@ -36,7 +36,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const addToCart = () => {
     if (!product || !selectedSize) return;
     const cart = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":0}');
-    const maxForSize = product.size_stock?.[selectedSize] ?? Infinity;
+    const maxForSize = product.color_stock?.[selectedColor]?.[selectedSize]
+      ?? product.size_stock?.[selectedSize]
+      ?? Infinity;
     const existing = cart.items.findIndex(
       (i: any) => i.product_id === product.id && i.size === selectedSize && i.color === selectedColor
     );
@@ -50,7 +52,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cart.items[existing].subtotal = cart.items[existing].quantity * product.price;
     } else {
       const imageUrl = images[activeImage] || images[0] || '';
-      const sizeMax = product.size_stock?.[selectedSize];
+      const sizeMax = product.color_stock?.[selectedColor]?.[selectedSize]
+        ?? product.size_stock?.[selectedSize];
       cart.items.push({
         product_id: product.id,
         name: product.name,
@@ -174,7 +177,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       {product.colors.map((color, i) => (
                         <button
                           key={color}
-                          onClick={() => { setSelectedColor(color); if (i < images.length) setActiveImage(i); }}
+                          onClick={() => { setSelectedColor(color); if (i < images.length) setActiveImage(i); setSelectedSize(''); }}
                           className={`px-4 py-2 rounded-full text-sm border transition-all ${
                             selectedColor === color
                               ? 'border-black bg-black text-white'
@@ -189,7 +192,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 )}
 
                 {/* Размер */}
-                {product.sizes?.length > 0 && (
+                {product.sizes?.length > 0 && (() => {
+                  const availableSizes = product.color_stock && selectedColor && product.color_stock[selectedColor]
+                    ? Object.entries(product.color_stock[selectedColor]).filter(([, q]) => q > 0).map(([s]) => s)
+                    : product.sizes;
+                  return (
                   <div className="mb-10">
                     <div className="flex justify-between items-center mb-3">
                       <p className="text-xs  uppercase tracking-widest">Размер</p>
@@ -198,7 +205,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {product.sizes.map((size) => (
+                      {availableSizes.map((size) => (
                         <button
                           key={size}
                           onClick={() => setSelectedSize(size)}
@@ -213,7 +220,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       ))}
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* Кнопка */}
                 <motion.button

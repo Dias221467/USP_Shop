@@ -95,7 +95,7 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 	}
 
 	for _, item := range items {
-		_ = s.productRepo.DecrementSizeStock(ctx, item.ProductID.Hex(), item.Size, item.Quantity)
+		_ = s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
 	}
 
 	return order, nil

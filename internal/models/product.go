@@ -22,9 +22,10 @@ type Product struct {
 	Category    Category           `bson:"category" json:"category"`
 	Brand       string             `bson:"brand" json:"brand"`
 	Images      []string           `bson:"images" json:"images"`
-	Sizes       []string           `bson:"sizes" json:"sizes"`
-	SizeStock   map[string]int     `bson:"size_stock" json:"size_stock"`
-	Colors      []string           `bson:"colors" json:"colors"`
+	Sizes       []string                       `bson:"sizes" json:"sizes"`
+	SizeStock   map[string]int                 `bson:"size_stock" json:"size_stock"`
+	ColorStock  map[string]map[string]int      `bson:"color_stock" json:"color_stock"`
+	Colors      []string                       `bson:"colors" json:"colors"`
 	Stock       int                `bson:"stock" json:"stock"`
 	IsActive    bool               `bson:"is_active" json:"is_active"`
 	CreatedAt   time.Time          `bson:"created_at" json:"created_at"`

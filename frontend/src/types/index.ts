@@ -17,6 +17,7 @@ export interface Product {
   images: string[];
   sizes: string[];
   size_stock?: Record<string, number>;
+  color_stock?: Record<string, Record<string, number>>;
   colors: string[];
   stock: number;
   is_active: boolean;
