@@ -28,6 +28,7 @@ func (s *ProductService) Create(ctx context.Context, req models.ProductRequest) 
 
 	p := &models.Product{
 		Name:        req.Name,
+		AtikoName:   req.AtikoName,
 		Description: req.Description,
 		Price:       req.Price,
 		Category:    req.Category,
@@ -59,6 +60,7 @@ func (s *ProductService) Update(ctx context.Context, id string, req models.Produ
 	}
 
 	p.Name = req.Name
+	p.AtikoName = req.AtikoName
 	p.Description = req.Description
 	p.Price = req.Price
 	p.Category = req.Category

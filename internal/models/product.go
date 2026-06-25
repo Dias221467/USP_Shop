@@ -16,6 +16,7 @@ const (
 type Product struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name        string             `bson:"name" json:"name"`
+	AtikoName   string             `bson:"atiko_name" json:"atiko_name"`
 	Description string             `bson:"description" json:"description"`
 	Price       float64            `bson:"price" json:"price"`
 	Category    Category           `bson:"category" json:"category"`
@@ -31,6 +32,7 @@ type Product struct {
 
 type ProductRequest struct {
 	Name        string   `json:"name"`
+	AtikoName   string   `json:"atiko_name"`
 	Description string   `json:"description"`
 	Price       float64  `json:"price"`
 	Category    Category `json:"category"`

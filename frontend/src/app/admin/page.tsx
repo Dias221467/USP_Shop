@@ -53,7 +53,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const EMPTY_FORM = {
-  name: '', brand: '', description: '', price: '',
+  name: '', atiko_name: '', brand: '', description: '', price: '',
   category: 'shoes', sizes: '', colors: '', stock: '', images: [] as string[],
 };
 
@@ -108,7 +108,7 @@ export default function AdminPage() {
   const openEdit = (p: Product) => {
     setEditProduct(p);
     setForm({
-      name: p.name, brand: p.brand, description: p.description,
+      name: p.name, atiko_name: p.atiko_name || '', brand: p.brand, description: p.description,
       price: String(p.price), category: p.category,
       sizes: (p.sizes || []).join(', '), colors: (p.colors || []).join(', '),
       stock: String(p.stock), images: [...(p.images || [])],
@@ -184,7 +184,7 @@ export default function AdminPage() {
     setSaving(true);
     try {
       const body = {
-        name: form.name, brand: form.brand, description: form.description,
+        name: form.name, atiko_name: form.atiko_name, brand: form.brand, description: form.description,
         price: parseFloat(form.price), category: form.category,
         sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
         colors: form.colors.split(',').map((c) => c.trim()).filter(Boolean),
@@ -461,6 +461,12 @@ export default function AdminPage() {
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Название</label>
                     <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                       className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Название в Atiko</label>
+                    <input value={form.atiko_name} onChange={(e) => setForm({ ...form, atiko_name: e.target.value })}
+                      placeholder="Как называется в кассе (для импорта Excel)"
+                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20 placeholder:text-black/20" />
                   </div>
                   <div>
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Бренд</label>

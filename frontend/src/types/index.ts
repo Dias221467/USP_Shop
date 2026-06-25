@@ -9,6 +9,7 @@ export interface User {
 export interface Product {
   id: string;
   name: string;
+  atiko_name?: string;
   description: string;
   price: number;
   category: 'shoes' | 'clothing';
