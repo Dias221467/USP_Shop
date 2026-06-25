@@ -472,8 +472,25 @@ export default function AdminPage() {
                   </div>
                   <div className="col-span-2">
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Размеры (через запятую)</label>
+                    {form.category === 'clothing' && (
+                      <div className="flex gap-1.5 flex-wrap mb-2">
+                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((s) => {
+                          const active = form.sizes.split(',').map(x => x.trim()).includes(s);
+                          return (
+                            <button key={s} type="button"
+                              onClick={() => {
+                                const current = form.sizes.split(',').map(x => x.trim()).filter(Boolean);
+                                const next = active ? current.filter(x => x !== s) : [...current, s];
+                                setForm({ ...form, sizes: next.join(', ') });
+                              }}
+                              className={`px-3 py-1 rounded-lg text-xs border transition-colors ${active ? 'bg-black text-white border-black' : 'border-black/15 hover:border-black/40'}`}
+                            >{s}</button>
+                          );
+                        })}
+                      </div>
+                    )}
                     <input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                      placeholder="39, 40, 41, 42, 43"
+                      placeholder={form.category === 'clothing' ? 'XS, S, M, L, XL, XXL' : '39, 40, 41, 42, 43'}
                       className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
                   </div>
                   <div className="col-span-2">
