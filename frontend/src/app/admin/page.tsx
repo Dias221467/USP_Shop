@@ -166,7 +166,7 @@ export default function AdminPage() {
     setApplying(true);
     const items = importPreview
       .filter((p) => p.matched_id)
-      .map((p) => ({ product_id: p.matched_id, sizes: p.sizes, total_stock: p.total_stock }));
+      .map((p) => ({ product_id: p.matched_id, size_stock: p.size_stock }));
     try {
       const res = await api.post('/api/admin/import/apply', { items });
       alert(`Обновлено товаров: ${res.data.updated}`);

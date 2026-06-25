@@ -21,22 +21,22 @@ func NewImportHandler(productRepo *repository.ProductRepository) *ImportHandler 
 }
 
 type ImportPreviewItem struct {
-	ExcelName  string   `json:"excel_name"`
-	Sizes      []string `json:"sizes"`
-	TotalStock int      `json:"total_stock"`
-	MatchedID  string   `json:"matched_id"`
-	MatchedName string  `json:"matched_name"`
+	ExcelName   string         `json:"excel_name"`
+	SizeStock   map[string]int `json:"size_stock"`
+	Sizes       []string       `json:"sizes"`
+	TotalStock  int            `json:"total_stock"`
+	MatchedID   string         `json:"matched_id"`
+	MatchedName string         `json:"matched_name"`
 }
 
 type ApplyRequest struct {
 	Items []struct {
-		ProductID  string   `json:"product_id"`
-		Sizes      []string `json:"sizes"`
-		TotalStock int      `json:"total_stock"`
+		ProductID string         `json:"product_id"`
+		SizeStock map[string]int `json:"size_stock"`
 	} `json:"items"`
 }
 
-func normalize(s string) string {
+func normalizeStr(s string) string {
 	s = strings.ToLower(s)
 	var b strings.Builder
 	for _, r := range s {
@@ -45,36 +45,6 @@ func normalize(s string) string {
 		}
 	}
 	return strings.Join(strings.Fields(b.String()), " ")
-}
-
-func matchScore(excelName, dbName string) int {
-	en := normalize(excelName)
-	dn := normalize(dbName)
-	if en == dn {
-		return 100
-	}
-	if strings.Contains(en, dn) || strings.Contains(dn, en) {
-		return 80
-	}
-	// count common words
-	enWords := strings.Fields(en)
-	dnWords := strings.Fields(dn)
-	dnSet := map[string]bool{}
-	for _, w := range dnWords {
-		if len(w) > 2 {
-			dnSet[w] = true
-		}
-	}
-	common := 0
-	for _, w := range enWords {
-		if len(w) > 2 && dnSet[w] {
-			common++
-		}
-	}
-	if common == 0 {
-		return 0
-	}
-	return common * 100 / len(dnWords)
 }
 
 func (h *ImportHandler) Preview(w http.ResponseWriter, r *http.Request) {
@@ -107,25 +77,26 @@ func (h *ImportHandler) Preview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// build lookup: normalized atiko_name -> product
+	atikoIndex := map[string]models.Product{}
+	for _, p := range products {
+		if p.AtikoName != "" {
+			atikoIndex[normalizeStr(p.AtikoName)] = p
+		}
+	}
+
 	var result []ImportPreviewItem
 	for _, ep := range parsed {
 		item := ImportPreviewItem{
-			ExcelName:  ep.Name,
+			ExcelName:  ep.BaseName,
+			SizeStock:  ep.SizeStock,
 			Sizes:      ep.Sizes,
 			TotalStock: ep.TotalStock,
 		}
-		best := 0
-		for _, p := range products {
-			score := matchScore(ep.Name, p.Name)
-			if score > best {
-				best = score
-				item.MatchedID = p.ID.Hex()
-				item.MatchedName = p.Name
-			}
-		}
-		if best < 50 {
-			item.MatchedID = ""
-			item.MatchedName = ""
+		key := normalizeStr(ep.BaseName)
+		if p, ok := atikoIndex[key]; ok {
+			item.MatchedID = p.ID.Hex()
+			item.MatchedName = p.Name
 		}
 		result = append(result, item)
 	}
@@ -146,7 +117,7 @@ func (h *ImportHandler) Apply(w http.ResponseWriter, r *http.Request) {
 		if item.ProductID == "" {
 			continue
 		}
-		err := h.productRepo.UpdateStock(r.Context(), item.ProductID, item.Sizes, item.TotalStock)
+		err := h.productRepo.UpdateStock(r.Context(), item.ProductID, item.SizeStock)
 		if err == nil {
 			updated++
 		}

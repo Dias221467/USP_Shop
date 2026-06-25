@@ -12,9 +12,10 @@ import (
 )
 
 type ParsedProduct struct {
-	Name       string   `json:"name"`
-	Sizes      []string `json:"sizes"`
-	TotalStock int      `json:"total_stock"`
+	BaseName   string         `json:"base_name"`
+	SizeStock  map[string]int `json:"size_stock"`
+	Sizes      []string       `json:"sizes"`
+	TotalStock int            `json:"total_stock"`
 }
 
 var sizeRe = regexp.MustCompile(`р\.\s*(\d+)`)
@@ -36,13 +37,9 @@ func ParseStockReport(data []byte) ([]ParsedProduct, error) {
 		return nil, err
 	}
 
-	type item struct {
-		base string
-		size string
-		qty  int
-	}
+	// base name -> size -> qty
+	stockMap := map[string]map[string]int{}
 
-	var items []item
 	for _, row := range rows {
 		if len(row) < 4 {
 			continue
@@ -65,38 +62,34 @@ func ParseStockReport(data []byte) ([]ParsedProduct, error) {
 			name = strings.TrimSpace(sizeRe.ReplaceAllString(name, ""))
 		}
 
-		items = append(items, item{base: name, size: size, qty: int(qty)})
+		if stockMap[name] == nil {
+			stockMap[name] = map[string]int{}
+		}
+		stockMap[name][size] += int(qty)
 	}
 
-	productMap := map[string]*ParsedProduct{}
-	sizeSet := map[string]map[string]bool{}
-
-	for _, it := range items {
-		if _, ok := productMap[it.base]; !ok {
-			productMap[it.base] = &ParsedProduct{Name: it.base}
-			sizeSet[it.base] = map[string]bool{}
+	result := make([]ParsedProduct, 0, len(stockMap))
+	for base, sizeQty := range stockMap {
+		p := ParsedProduct{
+			BaseName:  base,
+			SizeStock: sizeQty,
 		}
-		productMap[it.base].TotalStock += it.qty
-		if it.size != "" {
-			sizeSet[it.base][it.size] = true
-		}
-	}
-
-	result := make([]ParsedProduct, 0, len(productMap))
-	for name, p := range productMap {
-		for s := range sizeSet[name] {
-			p.Sizes = append(p.Sizes, s)
+		for size, qty := range sizeQty {
+			if size != "" && qty > 0 {
+				p.Sizes = append(p.Sizes, size)
+			}
+			p.TotalStock += qty
 		}
 		sort.Slice(p.Sizes, func(i, j int) bool {
 			a, _ := strconv.Atoi(p.Sizes[i])
 			b, _ := strconv.Atoi(p.Sizes[j])
 			return a < b
 		})
-		result = append(result, *p)
+		result = append(result, p)
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Name < result[j].Name
+		return result[i].BaseName < result[j].BaseName
 	})
 
 	return result, nil

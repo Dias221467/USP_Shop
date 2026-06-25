@@ -36,9 +36,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const addToCart = () => {
     if (!product || !selectedSize) return;
     const cart = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":0}');
+    const maxForSize = product.size_stock?.[selectedSize] ?? Infinity;
     const existing = cart.items.findIndex(
       (i: any) => i.product_id === product.id && i.size === selectedSize && i.color === selectedColor
     );
+    const alreadyInCart = existing >= 0 ? cart.items[existing].quantity : 0;
+    if (alreadyInCart >= maxForSize) {
+      alert(`Этого размера осталось только ${maxForSize} шт.`);
+      return;
+    }
     if (existing >= 0) {
       cart.items[existing].quantity += 1;
       cart.items[existing].subtotal = cart.items[existing].quantity * product.price;

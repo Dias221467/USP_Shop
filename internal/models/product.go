@@ -23,6 +23,7 @@ type Product struct {
 	Brand       string             `bson:"brand" json:"brand"`
 	Images      []string           `bson:"images" json:"images"`
 	Sizes       []string           `bson:"sizes" json:"sizes"`
+	SizeStock   map[string]int     `bson:"size_stock" json:"size_stock"`
 	Colors      []string           `bson:"colors" json:"colors"`
 	Stock       int                `bson:"stock" json:"stock"`
 	IsActive    bool               `bson:"is_active" json:"is_active"`

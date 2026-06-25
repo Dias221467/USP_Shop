@@ -16,6 +16,7 @@ export interface Product {
   brand: string;
   images: string[];
   sizes: string[];
+  size_stock?: Record<string, number>;
   colors: string[];
   stock: number;
   is_active: boolean;

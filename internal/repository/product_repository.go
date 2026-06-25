@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"sort"
+	"strconv"
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
@@ -104,16 +106,31 @@ func (r *ProductRepository) Patch(ctx context.Context, id string, fields bson.M)
 	return nil
 }
 
-func (r *ProductRepository) UpdateStock(ctx context.Context, id string, sizes []string, stock int) error {
+func (r *ProductRepository) UpdateStock(ctx context.Context, id string, sizeStock map[string]int) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
-	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": bson.M{
+	sizes := []string{}
+	total := 0
+	for size, qty := range sizeStock {
+		if qty > 0 {
+			sizes = append(sizes, size)
+			total += qty
+		}
+	}
+	sort.Slice(sizes, func(i, j int) bool {
+		a, _ := strconv.Atoi(sizes[i])
+		b, _ := strconv.Atoi(sizes[j])
+		return a < b
+	})
+	fields := bson.M{
+		"size_stock": sizeStock,
 		"sizes":      sizes,
-		"stock":      stock,
+		"stock":      total,
 		"updated_at": time.Now(),
-	}})
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": fields})
 	return err
 }
 
