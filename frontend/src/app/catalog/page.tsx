@@ -117,7 +117,7 @@ function CatalogContent() {
                       transition={{ duration: 0.6, delay: index * 0.05, ease: [0.65, 0, 0.35, 1] }}
                       onHoverStart={() => setHoveredId(product.id)}
                       onHoverEnd={() => setHoveredId(null)}
-                      className="group cursor-pointer"
+                      className={`group cursor-pointer ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                     >
                       <motion.div
                         className="aspect-[4/5] rounded-3xl overflow-hidden bg-white border border-black/8 relative"

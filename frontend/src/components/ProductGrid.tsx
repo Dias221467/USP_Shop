@@ -61,7 +61,7 @@ export function ProductGrid() {
                   transition={{ duration: 0.8, delay: index * 0.15, ease: [0.65, 0, 0.35, 1] }}
                   onHoverStart={() => setHoveredId(product.id)}
                   onHoverEnd={() => setHoveredId(null)}
-                  className="group cursor-pointer"
+                  className={`group cursor-pointer ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
                 >
                   <motion.div
                     className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8"
