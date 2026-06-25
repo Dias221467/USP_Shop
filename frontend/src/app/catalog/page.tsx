@@ -110,14 +110,16 @@ function CatalogContent() {
                   : null;
 
                 return (
-                  <Link href={`/product/${product.id}`} key={product.id}>
+                  <div key={product.id} className={product.stock === 0 ? 'cursor-default' : ''}>
+                    {product.stock > 0 ? (
+                      <Link href={`/product/${product.id}`}>
                     <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, delay: index * 0.05, ease: [0.65, 0, 0.35, 1] }}
                       onHoverStart={() => setHoveredId(product.id)}
                       onHoverEnd={() => setHoveredId(null)}
-                      className={`group cursor-pointer ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
+                      className="group cursor-pointer"
                     >
                       <motion.div
                         className="aspect-[4/5] rounded-3xl overflow-hidden bg-white border border-black/8 relative"
@@ -130,18 +132,8 @@ function CatalogContent() {
                           transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}
                         >
                           {imageUrl ? (
-                            <img
-                              src={imageUrl}
-                              alt={product.name}
-                              className="w-full h-full object-contain"
-                              onError={(e) => {
-                                const target = e.currentTarget;
-                                target.style.display = 'none';
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  parent.innerHTML = `<div class="flex flex-col items-center justify-center gap-3 opacity-20"><span class="text-5xl font-black">${product.brand.slice(0,1)}</span><span class="text-xs tracking-widest uppercase">${product.brand}</span></div>`;
-                                }
-                              }}
+                            <img src={imageUrl} alt={product.name} className="w-full h-full object-contain"
+                              onError={(e) => { const t = e.currentTarget; t.style.display = 'none'; const p = t.parentElement; if (p) p.innerHTML = `<div class="flex flex-col items-center justify-center gap-3 opacity-20"><span class="text-5xl font-black">${product.brand.slice(0,1)}</span><span class="text-xs tracking-widest uppercase">${product.brand}</span></div>`; }}
                             />
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-3 opacity-20">
@@ -150,21 +142,40 @@ function CatalogContent() {
                             </div>
                           )}
                         </motion.div>
-
-                        {product.stock === 0 && (
-                          <div className="absolute top-4 left-4 bg-black/70 text-white text-xs px-3 py-1 rounded-full">
-                            Нет в наличии
-                          </div>
-                        )}
                       </motion.div>
 
                       <div className="mt-4 px-1">
-                        <p className="text-xs  uppercase tracking-widest mb-1">{product.brand}</p>
+                        <p className="text-xs uppercase tracking-widest mb-1">{product.brand}</p>
                         <h3 className="font-light text-base leading-snug mb-1">{product.name}</h3>
                         <p className="font-light">₸{product.price.toLocaleString()}</p>
                       </div>
                     </motion.div>
-                  </Link>
+                      </Link>
+                    ) : (
+                      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.05 }}>
+                        <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-white border border-black/8 relative" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                          <div className="absolute inset-0 flex items-center justify-center p-10">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={product.name} className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center gap-3 opacity-20">
+                                <span className="text-5xl font-black">{product.brand.slice(0,1)}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="absolute inset-0 bg-white/70 rounded-3xl" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="bg-black/80 text-white text-xs px-4 py-1.5 rounded-full">Нет в наличии</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 px-1">
+                          <p className="text-xs uppercase tracking-widest mb-1 text-black/40">{product.brand}</p>
+                          <h3 className="font-light text-base leading-snug mb-1 text-black/40">{product.name}</h3>
+                          <p className="font-light text-black/40">₸{product.price.toLocaleString()}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
                 );
               })}
             </div>

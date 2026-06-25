@@ -53,64 +53,65 @@ export function ProductGrid() {
               : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80';
 
             return (
-              <Link href={`/product/${product.id}`} key={product.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-100px' }}
-                  transition={{ duration: 0.8, delay: index * 0.15, ease: [0.65, 0, 0.35, 1] }}
-                  onHoverStart={() => setHoveredId(product.id)}
-                  onHoverEnd={() => setHoveredId(null)}
-                  className={`group cursor-pointer ${product.stock === 0 ? 'opacity-50 grayscale' : ''}`}
-                >
-                  <motion.div
-                    className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8"
-                    animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
-                    transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
-                  >
+              <div key={product.id}>
+                {product.stock > 0 ? (
+                  <Link href={`/product/${product.id}`}>
                     <motion.div
-                      className="absolute inset-0 flex items-center justify-center p-12"
-                      animate={{
-                        scale: hoveredId === product.id ? 1.1 : 1,
-                        rotate: hoveredId === product.id ? -5 : 0,
-                      }}
-                      transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+                      initial={{ opacity: 0, y: 40 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-100px' }}
+                      transition={{ duration: 0.8, delay: index * 0.15, ease: [0.65, 0, 0.35, 1] }}
+                      onHoverStart={() => setHoveredId(product.id)}
+                      onHoverEnd={() => setHoveredId(null)}
+                      className="group cursor-pointer"
                     >
-                      <img
-                        src={imageUrl}
-                        alt={product.name}
-                        className="w-full h-full object-contain drop-shadow-xl"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
+                      <motion.div
+                        className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8"
+                        animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
+                        transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+                      >
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center p-12"
+                          animate={{ scale: hoveredId === product.id ? 1.1 : 1, rotate: hoveredId === product.id ? -5 : 0 }}
+                          transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+                        >
+                          <img src={imageUrl} alt={product.name} className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                        </motion.div>
+                        <motion.div
+                          className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/60 to-transparent"
+                          animate={{ opacity: hoveredId === product.id ? 1 : 0, y: hoveredId === product.id ? 0 : 20 }}
+                          transition={{ duration: 0.4 }}
+                        >
+                          <h3 className="text-white text-2xl mb-2">{product.name}</h3>
+                          <p className="text-white/90 text-xl">₸{product.price.toLocaleString()}</p>
+                        </motion.div>
+                      </motion.div>
+                      <motion.div className="mt-6 px-2" animate={{ opacity: hoveredId === product.id ? 0 : 1, y: hoveredId === product.id ? -10 : 0 }} transition={{ duration: 0.4 }}>
+                        <p className="text-xs uppercase tracking-widest text-black/40 mb-1">{product.brand}</p>
+                        <h3 className="text-lg font-light mb-1">{product.name}</h3>
+                        <p className="text-base">₸{product.price.toLocaleString()}</p>
+                      </motion.div>
                     </motion.div>
-
-                    <motion.div
-                      className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/60 to-transparent"
-                      animate={{
-                        opacity: hoveredId === product.id ? 1 : 0,
-                        y: hoveredId === product.id ? 0 : 20,
-                      }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      <h3 className="text-white text-2xl mb-2">{product.name}</h3>
-                      <p className="text-white/90 text-xl">₸{product.price.toLocaleString()}</p>
-                    </motion.div>
+                  </Link>
+                ) : (
+                  <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ duration: 0.8, delay: index * 0.15 }}>
+                    <div className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                      <div className="absolute inset-0 flex items-center justify-center p-12">
+                        <img src={imageUrl} alt={product.name} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                      </div>
+                      <div className="absolute inset-0 bg-white/70 rounded-3xl" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-black/80 text-white text-xs px-4 py-1.5 rounded-full">Нет в наличии</span>
+                      </div>
+                    </div>
+                    <div className="mt-6 px-2">
+                      <p className="text-xs uppercase tracking-widest text-black/30 mb-1">{product.brand}</p>
+                      <h3 className="text-lg font-light mb-1 text-black/40">{product.name}</h3>
+                      <p className="text-base text-black/30">₸{product.price.toLocaleString()}</p>
+                    </div>
                   </motion.div>
-
-                  <motion.div
-                    className="mt-6 px-2"
-                    animate={{
-                      opacity: hoveredId === product.id ? 0 : 1,
-                      y: hoveredId === product.id ? -10 : 0,
-                    }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <p className="text-xs uppercase tracking-widest text-black/40 mb-1">{product.brand}</p>
-                    <h3 className="text-lg font-light mb-1">{product.name}</h3>
-                    <p className="text-base">₸{product.price.toLocaleString()}</p>
-                  </motion.div>
-                </motion.div>
-              </Link>
+                )}
+              </div>
             );
           })}
         </div>
