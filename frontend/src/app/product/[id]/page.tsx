@@ -36,7 +36,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const addToCart = () => {
     if (!product || !selectedSize) return;
     const cart = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":0}');
-    const maxForSize = product.color_stock?.[selectedColor]?.[selectedSize]
+    const colorKey = selectedColor.toLowerCase();
+    const maxForSize = product.color_stock?.[colorKey]?.[selectedSize]
       ?? product.size_stock?.[selectedSize]
       ?? Infinity;
     const existing = cart.items.findIndex(
@@ -52,7 +53,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       cart.items[existing].subtotal = cart.items[existing].quantity * product.price;
     } else {
       const imageUrl = images[activeImage] || images[0] || '';
-      const sizeMax = product.color_stock?.[selectedColor]?.[selectedSize]
+      const sizeMax = product.color_stock?.[colorKey]?.[selectedSize]
         ?? product.size_stock?.[selectedSize];
       cart.items.push({
         product_id: product.id,
@@ -193,8 +194,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                 {/* Размер */}
                 {product.sizes?.length > 0 && (() => {
-                  const availableSizes = product.color_stock && selectedColor && product.color_stock[selectedColor]
-                    ? Object.entries(product.color_stock[selectedColor]).filter(([, q]) => q > 0).map(([s]) => s)
+                  const colorKey = selectedColor.toLowerCase();
+                  const availableSizes = product.color_stock && colorKey && product.color_stock[colorKey]
+                    ? Object.entries(product.color_stock[colorKey]).filter(([, q]) => q > 0).map(([s]) => s)
                     : product.sizes;
                   return (
                   <div className="mb-10">
