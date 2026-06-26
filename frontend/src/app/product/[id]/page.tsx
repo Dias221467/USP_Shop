@@ -195,31 +195,44 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 {/* Размер */}
                 {product.sizes?.length > 0 && (() => {
                   const colorKey = selectedColor.toLowerCase();
-                  const availableSizes = product.color_stock && colorKey && product.color_stock[colorKey]
-                    ? Object.entries(product.color_stock[colorKey]).filter(([, q]) => q > 0).map(([s]) => s)
+                  const colorSizes = product.color_stock?.[colorKey];
+                  const allSizes = colorSizes
+                    ? Object.keys(colorSizes)
                     : product.sizes;
+                  const isSoldOut = (size: string) => colorSizes ? (colorSizes[size] ?? 0) === 0 : false;
                   return (
                   <div className="mb-10">
                     <div className="flex justify-between items-center mb-3">
-                      <p className="text-xs  uppercase tracking-widest">Размер</p>
+                      <p className="text-xs uppercase tracking-widest">Размер</p>
                       {!selectedSize && (
                         <p className="text-xs text-red-400">Выберите размер</p>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {availableSizes.map((size) => (
+                      {allSizes.map((size) => {
+                        const soldOut = isSoldOut(size);
+                        return (
                         <button
                           key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`w-14 h-14 rounded-xl text-sm transition-all ${
-                            selectedSize === size
+                          onClick={() => !soldOut && setSelectedSize(size)}
+                          disabled={soldOut}
+                          className={`w-14 h-14 rounded-xl text-sm transition-all relative ${
+                            soldOut
+                              ? 'bg-black/5 text-black/25 cursor-not-allowed'
+                              : selectedSize === size
                               ? 'bg-black text-white'
                               : 'bg-black/5 hover:bg-black/10'
                           }`}
                         >
                           {size}
+                          {soldOut && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <span className="w-8 border-t border-black/20 rotate-45 absolute" />
+                            </span>
+                          )}
                         </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   );
