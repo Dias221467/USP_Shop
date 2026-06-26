@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
@@ -190,12 +191,13 @@ func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color
 	var fields bson.M
 
 	if len(p.ColorStock) > 0 && color != "" {
-		if p.ColorStock[color] == nil {
+		colorKey := strings.ToLower(color)
+		if p.ColorStock[colorKey] == nil {
 			return nil
 		}
-		p.ColorStock[color][size] -= qty
-		if p.ColorStock[color][size] < 0 {
-			p.ColorStock[color][size] = 0
+		p.ColorStock[colorKey][size] -= qty
+		if p.ColorStock[colorKey][size] < 0 {
+			p.ColorStock[colorKey][size] = 0
 		}
 		sizesSet := map[string]bool{}
 		total := 0
