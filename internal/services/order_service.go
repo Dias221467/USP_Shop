@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Dias221467/USPShop/internal/models"
 	"github.com/Dias221467/USPShop/internal/repository"
@@ -21,6 +23,37 @@ func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository
 	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo}
 }
 
+// checkStock проверяет, хватает ли товара на складе для запрошенного количества
+func checkStock(p *models.Product, color, size string, qty int) error {
+	if len(p.ColorStock) > 0 && color != "" {
+		available := p.ColorStock[strings.ToLower(color)][size]
+		if available <= 0 {
+			return fmt.Errorf("«%s» (%s, %s) нет в наличии", p.Name, color, size)
+		}
+		if available < qty {
+			return fmt.Errorf("«%s» (%s, %s): осталось только %d шт.", p.Name, color, size, available)
+		}
+		return nil
+	}
+	if len(p.SizeStock) > 0 && size != "" {
+		available := p.SizeStock[size]
+		if available <= 0 {
+			return fmt.Errorf("«%s» (размер %s) нет в наличии", p.Name, size)
+		}
+		if available < qty {
+			return fmt.Errorf("«%s» (размер %s): осталось только %d шт.", p.Name, size, available)
+		}
+		return nil
+	}
+	if p.Stock <= 0 {
+		return fmt.Errorf("«%s» нет в наличии", p.Name)
+	}
+	if p.Stock < qty {
+		return fmt.Errorf("«%s»: осталось только %d шт.", p.Name, p.Stock)
+	}
+	return nil
+}
+
 func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req models.CreateOrderRequest) (*models.Order, error) {
 	if req.ShippingAddress.City == "" || req.ShippingAddress.Street == "" {
 		return nil, errors.New("city and street are required")
@@ -34,14 +67,24 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 	var total float64
 
 	if len(req.Items) > 0 {
-		// Товары переданы напрямую из фронта (localStorage корзина)
+		// Товары переданы напрямую из фронта (localStorage корзина).
+		// Цену и наличие берём из базы — данным клиента не доверяем.
 		for _, ri := range req.Items {
-			productObjID, _ := primitive.ObjectIDFromHex(ri.ProductID)
-			subtotal := float64(ri.Quantity) * ri.Price
+			if ri.Quantity <= 0 {
+				return nil, errors.New("Некорректное количество товара")
+			}
+			product, err := s.productRepo.FindByID(ctx, ri.ProductID)
+			if err != nil {
+				return nil, fmt.Errorf("Товар «%s» больше недоступен", ri.Name)
+			}
+			if err := checkStock(product, ri.Color, ri.Size, ri.Quantity); err != nil {
+				return nil, err
+			}
+			subtotal := float64(ri.Quantity) * product.Price
 			items = append(items, models.OrderItem{
-				ProductID: productObjID,
-				Name:      ri.Name,
-				Price:     ri.Price,
+				ProductID: product.ID,
+				Name:      product.Name,
+				Price:     product.Price,
 				Size:      ri.Size,
 				Color:     ri.Color,
 				Quantity:  ri.Quantity,
