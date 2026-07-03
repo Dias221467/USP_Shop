@@ -32,6 +32,9 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	if v := q.Get("max_price"); v != "" {
 		filter.MaxPrice, _ = strconv.ParseFloat(v, 64)
 	}
+	if q.Get("discounted") == "true" {
+		filter.Discounted = true
+	}
 
 	products, err := h.service.GetAll(r.Context(), filter)
 	if err != nil {

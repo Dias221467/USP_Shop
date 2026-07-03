@@ -19,6 +19,7 @@ type Product struct {
 	AtikoName   string             `bson:"atiko_name" json:"atiko_name"`
 	Description string             `bson:"description" json:"description"`
 	Price       float64            `bson:"price" json:"price"`
+	OldPrice    float64            `bson:"old_price,omitempty" json:"old_price,omitempty"`
 	Category    Category           `bson:"category" json:"category"`
 	Brand       string             `bson:"brand" json:"brand"`
 	Images      []string           `bson:"images" json:"images"`
@@ -37,6 +38,7 @@ type ProductRequest struct {
 	AtikoName   string   `json:"atiko_name"`
 	Description string   `json:"description"`
 	Price       float64  `json:"price"`
+	OldPrice    float64  `json:"old_price"`
 	Category    Category `json:"category"`
 	Brand       string   `json:"brand"`
 	Images      []string `json:"images"`
@@ -58,9 +60,10 @@ type ProductPatchRequest struct {
 }
 
 type ProductFilter struct {
-	Category Category `json:"category"`
-	Brand    string   `json:"brand"`
-	MinPrice float64  `json:"min_price"`
-	MaxPrice float64  `json:"max_price"`
-	Size     string   `json:"size"`
+	Category   Category `json:"category"`
+	Brand      string   `json:"brand"`
+	MinPrice   float64  `json:"min_price"`
+	MaxPrice   float64  `json:"max_price"`
+	Size       string   `json:"size"`
+	Discounted bool     `json:"discounted"`
 }

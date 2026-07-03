@@ -147,8 +147,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                 <p className="text-sm uppercase tracking-widest mb-3 text-black/40">{product.brand}</p>
                 <h1 className="text-4xl md:text-5xl font-light leading-tight mb-4">{product.name}</h1>
-                <div className="flex items-center gap-4 mb-8">
-                  <p className="text-3xl">₸{product.price.toLocaleString()}</p>
+                <div className="flex items-center gap-4 mb-8 flex-wrap">
+                  {product.old_price && product.old_price > product.price ? (
+                    <div className="flex items-center gap-3">
+                      <p className="text-3xl text-red-500">₸{product.price.toLocaleString()}</p>
+                      <p className="text-xl line-through text-black/30">₸{product.old_price.toLocaleString()}</p>
+                      <span className="text-xs px-3 py-1 rounded-full bg-red-500 text-white">
+                        -{Math.round((1 - product.price / product.old_price) * 100)}%
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-3xl">₸{product.price.toLocaleString()}</p>
+                  )}
                   {product.stock > 0 && product.stock <= 4 && (
                     <span className="text-xs px-3 py-1 rounded-full bg-orange-50 text-orange-500">
                       Осталось {product.stock} шт.

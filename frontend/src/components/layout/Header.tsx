@@ -17,10 +17,11 @@ function getTokenRole(): string | null {
   }
 }
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string; accent?: boolean }[] = [
   { href: '/catalog?category=shoes', label: 'Обувь' },
   { href: '/catalog?category=clothing', label: 'Одежда' },
   { href: '/catalog', label: 'Коллекции' },
+  { href: '/sales', label: 'Скидки', accent: true },
 ];
 
 export function Header() {
@@ -97,8 +98,8 @@ export function Header() {
           </Link>
 
           <nav className="hidden lg:flex gap-16 absolute left-1/2 -translate-x-1/2 text-sm">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link key={href} href={href} className="transition-opacity duration-300 hover:opacity-50">
+            {NAV_LINKS.map(({ href, label, accent }) => (
+              <Link key={href} href={href} className={`transition-opacity duration-300 hover:opacity-50 ${accent ? 'text-red-500' : ''}`}>
                 {label}
               </Link>
             ))}
@@ -150,11 +151,11 @@ export function Header() {
               className="fixed top-0 left-0 bottom-0 w-72 bg-white z-40 lg:hidden flex flex-col pt-24 pb-10 px-8"
             >
               <nav className="flex flex-col gap-1">
-                {NAV_LINKS.map(({ href, label }) => (
+                {NAV_LINKS.map(({ href, label, accent }) => (
                   <Link
                     key={href}
                     href={href}
-                    className="text-2xl font-light py-3 border-b border-black/5 hover:opacity-50 transition-opacity"
+                    className={`text-2xl font-light py-3 border-b border-black/5 hover:opacity-50 transition-opacity ${accent ? 'text-red-500' : ''}`}
                   >
                     {label}
                   </Link>

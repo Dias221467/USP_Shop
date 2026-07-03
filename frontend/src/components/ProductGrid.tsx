@@ -89,7 +89,14 @@ export function ProductGrid() {
                       <motion.div className="mt-6 px-2" animate={{ opacity: hoveredId === product.id ? 0 : 1, y: hoveredId === product.id ? -10 : 0 }} transition={{ duration: 0.4 }}>
                         <p className="text-xs uppercase tracking-widest text-black/40 mb-1">{product.brand}</p>
                         <h3 className="text-lg font-light mb-1">{product.name}</h3>
-                        <p className="text-base">₸{product.price.toLocaleString()}</p>
+                        {product.old_price && product.old_price > product.price ? (
+                          <p className="text-base">
+                            <span className="text-red-500">₸{product.price.toLocaleString()}</span>{' '}
+                            <span className="line-through text-black/30 text-sm">₸{product.old_price.toLocaleString()}</span>
+                          </p>
+                        ) : (
+                          <p className="text-base">₸{product.price.toLocaleString()}</p>
+                        )}
                       </motion.div>
                     </motion.div>
                   </Link>

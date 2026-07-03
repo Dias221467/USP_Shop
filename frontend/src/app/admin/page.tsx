@@ -53,7 +53,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const EMPTY_FORM = {
-  name: '', atiko_name: '', brand: '', description: '', price: '',
+  name: '', atiko_name: '', brand: '', description: '', price: '', old_price: '',
   category: 'shoes', sizes: '', colors: '', stock: '', images: [] as string[],
 };
 
@@ -109,7 +109,7 @@ export default function AdminPage() {
     setEditProduct(p);
     setForm({
       name: p.name, atiko_name: p.atiko_name || '', brand: p.brand, description: p.description,
-      price: String(p.price), category: p.category,
+      price: String(p.price), old_price: p.old_price ? String(p.old_price) : '', category: p.category,
       sizes: (p.sizes || []).join(', '), colors: (p.colors || []).join(', '),
       stock: String(p.stock), images: [...(p.images || [])],
     });
@@ -185,7 +185,7 @@ export default function AdminPage() {
     try {
       const body = {
         name: form.name, atiko_name: form.atiko_name, brand: form.brand, description: form.description,
-        price: parseFloat(form.price), category: form.category,
+        price: parseFloat(form.price), old_price: parseFloat(form.old_price) || 0, category: form.category,
         sizes: form.sizes.split(',').map((s) => s.trim()).filter(Boolean),
         colors: form.colors.split(',').map((c) => c.trim()).filter(Boolean),
         stock: parseInt(form.stock) || 0,
@@ -484,6 +484,12 @@ export default function AdminPage() {
                   <div>
                     <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Цена (₸)</label>
                     <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })}
+                      className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
+                  </div>
+                  <div>
+                    <label className="text-xs uppercase tracking-widest text-black/40 mb-1 block">Старая цена (₸) — для скидки</label>
+                    <input type="number" value={form.old_price} onChange={(e) => setForm({ ...form, old_price: e.target.value })}
+                      placeholder="Пусто = без скидки"
                       className="w-full bg-black/[0.03] rounded-xl px-4 py-3 text-sm outline-none border border-transparent focus:border-black/20" />
                   </div>
                   <div>

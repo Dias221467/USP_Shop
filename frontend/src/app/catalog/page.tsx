@@ -126,6 +126,11 @@ function CatalogContent() {
                         animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
                         transition={{ duration: 0.4 }}
                       >
+                        {product.old_price && product.old_price > product.price ? (
+                          <span className="absolute top-4 left-4 z-10 bg-red-500 text-white text-xs px-3 py-1 rounded-full">
+                            -{Math.round((1 - product.price / product.old_price) * 100)}%
+                          </span>
+                        ) : null}
                         <motion.div
                           className="absolute inset-0 flex items-center justify-center p-10"
                           animate={{ scale: hoveredId === product.id ? 1.08 : 1 }}
@@ -147,7 +152,14 @@ function CatalogContent() {
                       <div className="mt-4 px-1">
                         <p className="text-xs uppercase tracking-widest mb-1">{product.brand}</p>
                         <h3 className="font-light text-base leading-snug mb-1">{product.name}</h3>
-                        <p className="font-light">₸{product.price.toLocaleString()}</p>
+                        {product.old_price && product.old_price > product.price ? (
+                          <p className="font-light">
+                            <span className="text-red-500">₸{product.price.toLocaleString()}</span>{' '}
+                            <span className="line-through text-black/30 text-sm">₸{product.old_price.toLocaleString()}</span>
+                          </p>
+                        ) : (
+                          <p className="font-light">₸{product.price.toLocaleString()}</p>
+                        )}
                       </div>
                     </motion.div>
                       </Link>

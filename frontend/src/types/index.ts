@@ -12,6 +12,7 @@ export interface Product {
   atiko_name?: string;
   description: string;
   price: number;
+  old_price?: number;
   category: 'shoes' | 'clothing';
   brand: string;
   images: string[];

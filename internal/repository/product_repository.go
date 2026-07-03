@@ -56,6 +56,10 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFi
 	if filter.Size != "" {
 		query["sizes"] = filter.Size
 	}
+	if filter.Discounted {
+		// Скидка = старая цена задана и выше текущей
+		query["$expr"] = bson.M{"$gt": []interface{}{"$old_price", "$price"}}
+	}
 	if filter.MinPrice > 0 || filter.MaxPrice > 0 {
 		priceFilter := bson.M{}
 		if filter.MinPrice > 0 {
