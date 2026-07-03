@@ -1,12 +1,13 @@
 'use client';
 import { useState, useEffect, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ShoppingBag, Check } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Check, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import api from '@/lib/api';
+import { isFavorite, toggleFavorite } from '@/lib/favorites';
 import { Product } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -21,6 +22,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
+  const [fav, setFav] = useState(false);
+
+  useEffect(() => {
+    setFav(isFavorite(id));
+  }, [id]);
 
   useEffect(() => {
     api.get(`/api/products/${id}`)
@@ -248,12 +254,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   );
                 })()}
 
-                {/* Кнопка */}
+                {/* Кнопки */}
+                <div className="flex gap-3">
                 <motion.button
                   onClick={addToCart}
                   disabled={!selectedSize || product.stock === 0}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full py-5 rounded-2xl text-base tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-3 ${
+                  className={`flex-1 py-5 rounded-2xl text-base tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-3 ${
                     product.stock === 0
                       ? 'bg-black/10 text-black cursor-not-allowed'
                       : !selectedSize
@@ -271,6 +278,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     <><ShoppingBag className="w-5 h-5" /> В корзину</>
                   )}
                 </motion.button>
+                <motion.button
+                  onClick={() => setFav(toggleFavorite(product.id))}
+                  whileTap={{ scale: 0.9 }}
+                  className={`w-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                    fav ? 'bg-red-50' : 'bg-black/5 hover:bg-black/10'
+                  }`}
+                  title={fav ? 'Убрать из избранного' : 'В избранное'}
+                >
+                  <Heart className={`w-5 h-5 ${fav ? 'fill-red-500 text-red-500' : ''}`} />
+                </motion.button>
+                </div>
 
                 {added && (
                   <motion.div

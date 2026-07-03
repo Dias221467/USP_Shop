@@ -1,11 +1,13 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { Search, Heart } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import api from '@/lib/api';
+import { getFavorites, toggleFavorite } from '@/lib/favorites';
 import { Product } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -27,17 +29,42 @@ const FILTERS = [
   { label: 'Одежда', value: 'clothing' },
 ];
 
+const SORTS = [
+  { label: 'Сначала новинки', value: 'new' },
+  { label: 'Цена: по возрастанию', value: 'price_asc' },
+  { label: 'Цена: по убыванию', value: 'price_desc' },
+];
+
+const NEW_DAYS = 14;
+
+function isNew(p: Product): boolean {
+  if (!p.created_at) return false;
+  return Date.now() - new Date(p.created_at).getTime() < NEW_DAYS * 24 * 60 * 60 * 1000;
+}
+
 function CatalogContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get('category') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
   const [category, setCategory] = useState(categoryParam);
+  const [brand, setBrand] = useState('');
+  const [sort, setSort] = useState('new');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [favs, setFavs] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFavs(getFavorites());
+    const sync = () => setFavs(getFavorites());
+    window.addEventListener('favUpdate', sync);
+    return () => window.removeEventListener('favUpdate', sync);
+  }, []);
 
   useEffect(() => {
     setCategory(categoryParam);
+    setBrand('');
   }, [categoryParam]);
 
   useEffect(() => {
@@ -52,6 +79,30 @@ function CatalogContent() {
       .finally(() => setLoading(false));
   }, [category]);
 
+  const brands = useMemo(() => {
+    const set = new Set(products.map((p) => p.brand).filter(Boolean));
+    return Array.from(set).sort();
+  }, [products]);
+
+  const visible = useMemo(() => {
+    let list = [...products];
+    if (brand) list = list.filter((p) => p.brand === brand);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
+    }
+    if (sort === 'price_asc') list.sort((a, b) => a.price - b.price);
+    else if (sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+    // 'new' — порядок с бэкенда (created_at desc)
+    return list;
+  }, [products, brand, search, sort]);
+
+  const onToggleFav = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(id);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -62,18 +113,30 @@ function CatalogContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="mb-16"
+            className="mb-12"
           >
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
               <h1 className="text-5xl md:text-7xl lg:text-8xl tracking-tight">Каталог</h1>
               {!loading && (
                 <p className="text-black/30 text-sm pb-2">
-                  {products.length} {products.length === 1 ? 'товар' : products.length < 5 ? 'товара' : 'товаров'}
+                  {visible.length} {visible.length === 1 ? 'товар' : visible.length < 5 ? 'товара' : 'товаров'}
                 </p>
               )}
             </div>
 
-            <div className="flex gap-2">
+            {/* Поиск */}
+            <div className="relative max-w-md mb-6">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Поиск по названию или бренду..."
+                className="w-full bg-black/[0.04] rounded-full pl-11 pr-5 py-3 text-sm outline-none border border-transparent focus:border-black/20 transition-colors"
+              />
+            </div>
+
+            {/* Категории */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               {FILTERS.map((f) => (
                 <button
                   key={f.value}
@@ -88,6 +151,42 @@ function CatalogContent() {
                 </button>
               ))}
             </div>
+
+            {/* Бренды + сортировка */}
+            <div className="flex flex-wrap items-center gap-2">
+              {brands.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setBrand('')}
+                    className={`px-4 py-1.5 rounded-full text-xs transition-all duration-300 ${
+                      brand === '' ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'
+                    }`}
+                  >
+                    Все бренды
+                  </button>
+                  {brands.map((b) => (
+                    <button
+                      key={b}
+                      onClick={() => setBrand(brand === b ? '' : b)}
+                      className={`px-4 py-1.5 rounded-full text-xs transition-all duration-300 ${
+                        brand === b ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </>
+              )}
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="ml-auto bg-black/[0.04] rounded-full px-4 py-2 text-xs outline-none border border-transparent focus:border-black/20 appearance-none cursor-pointer"
+              >
+                {SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
           </motion.div>
 
           {loading ? (
@@ -96,18 +195,20 @@ function CatalogContent() {
                 <div key={i} className="aspect-[4/5] rounded-3xl bg-black/4 border border-black/5 animate-pulse" />
               ))}
             </div>
-          ) : products.length === 0 ? (
+          ) : visible.length === 0 ? (
             <div className="text-center py-40">
               <p className="text-4xl font-light opacity-20">Товары не найдены</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product, index) => {
+              {visible.map((product, index) => {
                 const imageUrl = product.images?.[0]
                   ? product.images[0].startsWith('http')
                     ? product.images[0]
                     : `${API_URL}${product.images[0]}`
                   : null;
+                const discounted = !!product.old_price && product.old_price > product.price;
+                const fav = favs.includes(product.id);
 
                 return (
                   <div key={product.id} className={product.stock === 0 ? 'cursor-default' : ''}>
@@ -126,11 +227,22 @@ function CatalogContent() {
                         animate={{ scale: hoveredId === product.id ? 0.98 : 1, boxShadow: hoveredId === product.id ? '0 8px 40px rgba(0,0,0,0.10)' : '0 2px 12px rgba(0,0,0,0.06)' }}
                         transition={{ duration: 0.4 }}
                       >
-                        {product.old_price && product.old_price > product.price ? (
-                          <span className="absolute top-4 left-4 z-10 bg-red-500 text-white text-xs px-3 py-1 rounded-full">
-                            -{Math.round((1 - product.price / product.old_price) * 100)}%
-                          </span>
-                        ) : null}
+                        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                          {discounted && (
+                            <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full w-fit">
+                              -{Math.round((1 - product.price / product.old_price!) * 100)}%
+                            </span>
+                          )}
+                          {isNew(product) && (
+                            <span className="bg-black text-white text-xs px-3 py-1 rounded-full w-fit">NEW</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => onToggleFav(e, product.id)}
+                          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:scale-110 transition-transform"
+                        >
+                          <Heart className={`w-4 h-4 ${fav ? 'fill-red-500 text-red-500' : 'text-black/40'}`} />
+                        </button>
                         <motion.div
                           className="absolute inset-0 flex items-center justify-center p-10"
                           animate={{ scale: hoveredId === product.id ? 1.08 : 1 }}
@@ -152,10 +264,10 @@ function CatalogContent() {
                       <div className="mt-4 px-1">
                         <p className="text-xs uppercase tracking-widest mb-1">{product.brand}</p>
                         <h3 className="font-light text-base leading-snug mb-1">{product.name}</h3>
-                        {product.old_price && product.old_price > product.price ? (
+                        {discounted ? (
                           <p className="font-light">
                             <span className="text-red-500">₸{product.price.toLocaleString()}</span>{' '}
-                            <span className="line-through text-black/30 text-sm">₸{product.old_price.toLocaleString()}</span>
+                            <span className="line-through text-black/30 text-sm">₸{product.old_price!.toLocaleString()}</span>
                           </p>
                         ) : (
                           <p className="font-light">₸{product.price.toLocaleString()}</p>

@@ -112,7 +112,7 @@ export default function CheckoutPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-sm"
+            className="text-center max-w-md w-full"
           >
             <motion.div
               initial={{ scale: 0 }}
@@ -123,14 +123,40 @@ export default function CheckoutPage() {
               <CheckCircle className="w-10 h-10 text-green-500" />
             </motion.div>
             <h1 className="text-3xl font-light mb-3">Заказ оформлен!</h1>
-            <p className="text-sm text-black/50 mb-2">
-              Мы свяжемся с вами в ближайшее время для подтверждения.
-            </p>
             {orderId && (
-              <p className="text-xs text-black/30 font-mono mb-8">
+              <p className="text-xs text-black/30 font-mono mb-6">
                 Номер заказа: #{orderId.slice(-8).toUpperCase()}
               </p>
             )}
+
+            {/* Состав заказа */}
+            <div className="bg-black/[0.03] rounded-2xl p-5 mb-6 text-left">
+              {items.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm py-1.5">
+                  <span className="text-black/60">
+                    {item.name}
+                    <span className="text-black/30"> · {item.color ? `${item.color}, ` : ''}{item.size} × {item.quantity}</span>
+                  </span>
+                  <span className="whitespace-nowrap ml-3">₸{item.subtotal.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="flex justify-between pt-3 mt-2 border-t border-black/10 font-medium">
+                <span>Итого</span>
+                <span>₸{total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Что дальше */}
+            <div className="text-left text-sm text-black/50 space-y-2.5 mb-8">
+              <p className="flex gap-2"><span>1.</span> Мы позвоним вам в ближайшее время, чтобы подтвердить заказ.</p>
+              {payment === 'kaspi' ? (
+                <p className="flex gap-2"><span>2.</span> После подтверждения отправим счёт в Kaspi — оплатите его в приложении.</p>
+              ) : (
+                <p className="flex gap-2"><span>2.</span> Оплата наличными при получении.</p>
+              )}
+              <p className="flex gap-2"><span>3.</span> Заберите заказ в магазине в Семее или дождитесь доставки по указанному адресу.</p>
+            </div>
+
             <div className="flex flex-col gap-3">
               <Link
                 href="/account"

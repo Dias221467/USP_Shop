@@ -1,6 +1,6 @@
 'use client';
 
-import { ShoppingBag, Menu, User, X } from 'lucide-react';
+import { ShoppingBag, Menu, User, X, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -111,6 +111,9 @@ export function Header() {
                 Админ
               </Link>
             )}
+            <Link href="/favorites" className="hover:opacity-50 transition-opacity duration-300">
+              <Heart className="w-5 h-5" />
+            </Link>
             <Link href="/account" className="hover:opacity-50 transition-opacity duration-300">
               <User className="w-5 h-5" />
             </Link>

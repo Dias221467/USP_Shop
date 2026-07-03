@@ -22,6 +22,7 @@ export interface Product {
   colors: string[];
   stock: number;
   is_active: boolean;
+  created_at?: string;
 }
 
 export interface CartItem {
