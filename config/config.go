@@ -18,6 +18,8 @@ type Config struct {
 	CloudinaryCloudName    string
 	CloudinaryAPIKey       string
 	CloudinaryAPISecret    string
+	TelegramBotToken       string
+	TelegramChatID         string
 }
 
 func Load() *Config {
@@ -36,6 +38,8 @@ func Load() *Config {
 		CloudinaryCloudName: getEnv("CLOUDINARY_CLOUD_NAME", ""),
 		CloudinaryAPIKey:    getEnv("CLOUDINARY_API_KEY", ""),
 		CloudinaryAPISecret: getEnv("CLOUDINARY_API_SECRET", ""),
+		TelegramBotToken:    getEnv("TELEGRAM_BOT_TOKEN", ""),
+		TelegramChatID:      getEnv("TELEGRAM_CHAT_ID", ""),
 	}
 }
 

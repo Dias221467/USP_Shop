@@ -8,6 +8,7 @@ import (
 
 	"github.com/Dias221467/USPShop/internal/models"
 	"github.com/Dias221467/USPShop/internal/repository"
+	"github.com/Dias221467/USPShop/pkg/telegram"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -17,10 +18,11 @@ type OrderService struct {
 	cartRepo    *repository.CartRepository
 	userRepo    *repository.UserRepository
 	productRepo *repository.ProductRepository
+	notifier    *telegram.Notifier
 }
 
-func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository, productRepo *repository.ProductRepository) *OrderService {
-	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo}
+func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository, productRepo *repository.ProductRepository, notifier *telegram.Notifier) *OrderService {
+	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo, notifier: notifier}
 }
 
 // checkStock проверяет, хватает ли товара на складе для запрошенного количества
@@ -141,7 +143,35 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 		_ = s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
 	}
 
+	// Уведомление в Telegram в фоне — заказ не ждёт отправку
+	go s.notifyNewOrder(order)
+
 	return order, nil
+}
+
+func (s *OrderService) notifyNewOrder(order *models.Order) {
+	var b strings.Builder
+	fmt.Fprintf(&b, "🛍 <b>Новый заказ — ₸%.0f</b>\n\n", order.Total)
+
+	for _, it := range order.Items {
+		details := it.Size
+		if it.Color != "" {
+			details = it.Color + " · " + it.Size
+		}
+		fmt.Fprintf(&b, "• %s (%s) — %d шт. · ₸%.0f\n", it.Name, details, it.Quantity, it.Subtotal)
+	}
+
+	addr := order.ShippingAddress
+	fmt.Fprintf(&b, "\n👤 %s\n📞 %s\n📍 %s, %s %s", order.CustomerName, order.CustomerPhone, addr.City, addr.Street, addr.House)
+	if addr.Flat != "" {
+		fmt.Fprintf(&b, ", кв. %s", addr.Flat)
+	}
+	fmt.Fprintf(&b, "\n💳 %s", order.PaymentMethod)
+	if addr.Comment != "" {
+		fmt.Fprintf(&b, "\n💬 %s", addr.Comment)
+	}
+
+	_ = s.notifier.Send(b.String())
 }
 
 func (s *OrderService) GetByID(ctx context.Context, orderID, userID string, isAdmin bool) (*models.Order, error) {

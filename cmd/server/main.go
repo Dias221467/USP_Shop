@@ -15,6 +15,7 @@ import (
 	"github.com/Dias221467/USPShop/internal/services"
 	"github.com/Dias221467/USPShop/pkg/email"
 	"github.com/Dias221467/USPShop/pkg/logger"
+	"github.com/Dias221467/USPShop/pkg/telegram"
 	"github.com/Dias221467/USPShop/pkg/middleware"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -36,11 +37,14 @@ func main() {
 	// Email sender
 	mailer := email.NewSender(cfg.ResendAPIKey, cfg.SMTPUser)
 
+	// Telegram notifier (уведомления о заказах)
+	notifier := telegram.NewNotifier(cfg.TelegramBotToken, cfg.TelegramChatID)
+
 	// Services
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, mailer, cfg.AppURL)
 	productService := services.NewProductService(productRepo)
 	cartService := services.NewCartService(cartRepo, productRepo)
-	orderService := services.NewOrderService(orderRepo, cartRepo, userRepo, productRepo)
+	orderService := services.NewOrderService(orderRepo, cartRepo, userRepo, productRepo, notifier)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userService)
