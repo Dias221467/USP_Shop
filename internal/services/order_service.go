@@ -169,7 +169,13 @@ func (s *OrderService) CancelOrder(ctx context.Context, orderID, userID string) 
 	if order.Status != models.OrderStatusPending {
 		return errors.New("only pending orders can be cancelled")
 	}
-	return s.orderRepo.UpdateStatus(ctx, orderID, models.OrderStatusCancelled)
+	if err := s.orderRepo.UpdateStatus(ctx, orderID, models.OrderStatusCancelled); err != nil {
+		return err
+	}
+	for _, item := range order.Items {
+		_ = s.productRepo.RestoreStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
+	}
+	return nil
 }
 
 func (s *OrderService) GetMyOrders(ctx context.Context, userID string) ([]models.Order, error) {
@@ -192,10 +198,25 @@ func (s *OrderService) UpdateStatus(ctx context.Context, orderID string, req mod
 		return errors.New("invalid status")
 	}
 
-	_, err := s.orderRepo.FindByID(ctx, orderID)
+	order, err := s.orderRepo.FindByID(ctx, orderID)
 	if err != nil {
 		return errors.New("order not found")
 	}
 
-	return s.orderRepo.UpdateStatus(ctx, orderID, req.Status)
+	if err := s.orderRepo.UpdateStatus(ctx, orderID, req.Status); err != nil {
+		return err
+	}
+
+	// Отмена возвращает товар на склад, снятие отмены — списывает обратно
+	if req.Status == models.OrderStatusCancelled && order.Status != models.OrderStatusCancelled {
+		for _, item := range order.Items {
+			_ = s.productRepo.RestoreStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
+		}
+	} else if req.Status != models.OrderStatusCancelled && order.Status == models.OrderStatusCancelled {
+		for _, item := range order.Items {
+			_ = s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
+		}
+	}
+
+	return nil
 }

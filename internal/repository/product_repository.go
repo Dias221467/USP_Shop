@@ -179,6 +179,15 @@ func (r *ProductRepository) UpdateColorStock(ctx context.Context, id string, col
 }
 
 func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color string, size string, qty int) error {
+	return r.adjustStock(ctx, id, color, size, -qty)
+}
+
+// RestoreStock возвращает товар на склад (например, при отмене заказа)
+func (r *ProductRepository) RestoreStock(ctx context.Context, id string, color string, size string, qty int) error {
+	return r.adjustStock(ctx, id, color, size, qty)
+}
+
+func (r *ProductRepository) adjustStock(ctx context.Context, id string, color string, size string, delta int) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
@@ -193,9 +202,12 @@ func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color
 	if len(p.ColorStock) > 0 && color != "" {
 		colorKey := strings.ToLower(color)
 		if p.ColorStock[colorKey] == nil {
-			return nil
+			if delta <= 0 {
+				return nil
+			}
+			p.ColorStock[colorKey] = map[string]int{}
 		}
-		p.ColorStock[colorKey][size] -= qty
+		p.ColorStock[colorKey][size] += delta
 		if p.ColorStock[colorKey][size] < 0 {
 			p.ColorStock[colorKey][size] = 0
 		}
@@ -219,7 +231,7 @@ func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color
 		if p.SizeStock == nil {
 			p.SizeStock = map[string]int{}
 		}
-		p.SizeStock[size] -= qty
+		p.SizeStock[size] += delta
 		if p.SizeStock[size] < 0 {
 			p.SizeStock[size] = 0
 		}
@@ -238,7 +250,7 @@ func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color
 		})
 		fields = bson.M{"size_stock": p.SizeStock, "sizes": newSizes, "stock": total, "updated_at": time.Now()}
 	} else {
-		newStock := p.Stock - qty
+		newStock := p.Stock + delta
 		if newStock < 0 {
 			newStock = 0
 		}
