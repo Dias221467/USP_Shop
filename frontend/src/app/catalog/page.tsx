@@ -228,11 +228,9 @@ function CatalogContent() {
             <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product, index) => {
-                const imageUrl = product.images?.[0]
-                  ? product.images[0].startsWith('http')
-                    ? product.images[0]
-                    : `${API_URL}${product.images[0]}`
-                  : null;
+                const toUrl = (img: string) => (img.startsWith('http') ? img : `${API_URL}${img}`);
+                const imageUrl = product.images?.[0] ? toUrl(product.images[0]) : null;
+                const hoverImageUrl = product.images?.[1] ? toUrl(product.images[1]) : null;
                 const discounted = !!product.old_price && product.old_price > product.price;
                 const fav = favs.includes(product.id);
 
@@ -275,9 +273,17 @@ function CatalogContent() {
                           transition={{ duration: 0.5, ease: [0.65, 0, 0.35, 1] }}
                         >
                           {imageUrl ? (
-                            <img src={imageUrl} alt={product.name} className="w-full h-full object-contain"
-                              onError={(e) => { const t = e.currentTarget; t.style.display = 'none'; const p = t.parentElement; if (p) p.innerHTML = `<div class="flex flex-col items-center justify-center gap-3 opacity-20"><span class="text-5xl font-black">${product.brand.slice(0,1)}</span><span class="text-xs tracking-widest uppercase">${product.brand}</span></div>`; }}
-                            />
+                            <div className="relative w-full h-full">
+                              <img src={imageUrl} alt={product.name}
+                                className={`w-full h-full object-contain transition-opacity duration-300 ${hoverImageUrl && hoveredId === product.id ? 'opacity-0' : 'opacity-100'}`}
+                                onError={(e) => { const t = e.currentTarget; t.style.display = 'none'; const p = t.parentElement; if (p) p.innerHTML = `<div class="flex flex-col items-center justify-center gap-3 opacity-20"><span class="text-5xl font-black">${product.brand.slice(0,1)}</span><span class="text-xs tracking-widest uppercase">${product.brand}</span></div>`; }}
+                              />
+                              {hoverImageUrl && (
+                                <img src={hoverImageUrl} alt={product.name}
+                                  className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${hoveredId === product.id ? 'opacity-100' : 'opacity-0'}`}
+                                />
+                              )}
+                            </div>
                           ) : (
                             <div className="flex flex-col items-center justify-center gap-3 opacity-20">
                               <span className="text-5xl font-black">{product.brand.slice(0,1)}</span>

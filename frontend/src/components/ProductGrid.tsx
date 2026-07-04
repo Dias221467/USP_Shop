@@ -46,11 +46,11 @@ export function ProductGrid() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((product, index) => {
+            const toUrl = (img: string) => (img.startsWith('http') ? img : `${API_URL}${img}`);
             const imageUrl = product.images?.[0]
-              ? product.images[0].startsWith('http')
-                ? product.images[0]
-                : `${API_URL}${product.images[0]}`
+              ? toUrl(product.images[0])
               : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80';
+            const hoverImageUrl = product.images?.[1] ? toUrl(product.images[1]) : null;
 
             return (
               <div key={product.id}>
@@ -75,7 +75,16 @@ export function ProductGrid() {
                           animate={{ scale: hoveredId === product.id ? 1.1 : 1, rotate: hoveredId === product.id ? -5 : 0 }}
                           transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
                         >
-                          <img src={imageUrl} alt={product.name} className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                          <div className="relative w-full h-full">
+                            <img src={imageUrl} alt={product.name}
+                              className={`w-full h-full object-contain drop-shadow-xl transition-opacity duration-300 ${hoverImageUrl && hoveredId === product.id ? 'opacity-0' : 'opacity-100'}`}
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            {hoverImageUrl && (
+                              <img src={hoverImageUrl} alt={product.name}
+                                className={`absolute inset-0 w-full h-full object-contain drop-shadow-xl transition-opacity duration-300 ${hoveredId === product.id ? 'opacity-100' : 'opacity-0'}`}
+                              />
+                            )}
+                          </div>
                         </motion.div>
                         <motion.div
                           className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/60 to-transparent"
