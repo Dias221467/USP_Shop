@@ -150,7 +150,7 @@ func (h *ImportHandler) Preview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	products, err := h.productRepo.FindAll(r.Context(), models.ProductFilter{})
+	products, _, err := h.productRepo.FindAll(r.Context(), models.ProductFilter{})
 	if err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)
 		return

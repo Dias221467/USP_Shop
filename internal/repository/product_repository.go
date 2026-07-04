@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -44,7 +45,7 @@ func (r *ProductRepository) FindByID(ctx context.Context, id string) (*models.Pr
 	return &p, nil
 }
 
-func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFilter) ([]models.Product, error) {
+func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFilter) ([]models.Product, int64, error) {
 	query := bson.M{"is_active": true}
 
 	if filter.Category != "" {
@@ -60,6 +61,11 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFi
 		// Скидка = старая цена задана и выше текущей
 		query["$expr"] = bson.M{"$gt": []interface{}{"$old_price", "$price"}}
 	}
+	if filter.Search != "" {
+		// Поиск по названию и бренду, без учёта регистра
+		re := primitive.Regex{Pattern: regexp.QuoteMeta(filter.Search), Options: "i"}
+		query["$or"] = []bson.M{{"name": re}, {"brand": re}}
+	}
 	if filter.MinPrice > 0 || filter.MaxPrice > 0 {
 		priceFilter := bson.M{}
 		if filter.MinPrice > 0 {
@@ -71,18 +77,55 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFi
 		query["price"] = priceFilter
 	}
 
-	opts := options.Find().SetSort(bson.M{"created_at": -1})
+	total, err := r.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	sortOpt := bson.D{{Key: "created_at", Value: -1}}
+	switch filter.Sort {
+	case "price_asc":
+		sortOpt = bson.D{{Key: "price", Value: 1}}
+	case "price_desc":
+		sortOpt = bson.D{{Key: "price", Value: -1}}
+	}
+
+	opts := options.Find().SetSort(sortOpt)
+	if filter.Limit > 0 {
+		page := filter.Page
+		if page < 1 {
+			page = 1
+		}
+		opts.SetSkip(int64((page - 1) * filter.Limit)).SetLimit(int64(filter.Limit))
+	}
+
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
 	var products []models.Product
 	if err := cursor.All(ctx, &products); err != nil {
+		return nil, 0, err
+	}
+	return products, total, nil
+}
+
+// Brands возвращает список уникальных брендов активных товаров
+func (r *ProductRepository) Brands(ctx context.Context) ([]string, error) {
+	values, err := r.collection.Distinct(ctx, "brand", bson.M{"is_active": true})
+	if err != nil {
 		return nil, err
 	}
-	return products, nil
+	brands := []string{}
+	for _, v := range values {
+		if s, ok := v.(string); ok && s != "" {
+			brands = append(brands, s)
+		}
+	}
+	sort.Strings(brands)
+	return brands, nil
 }
 
 func (r *ProductRepository) Update(ctx context.Context, id string, p *models.Product) error {

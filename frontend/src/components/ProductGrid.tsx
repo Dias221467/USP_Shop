@@ -22,8 +22,8 @@ export function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    api.get('/api/products').then((res) => {
-      const data = res.data?.slice(0, 6) || [];
+    api.get('/api/products?limit=6').then((res) => {
+      const data = res.data?.items || [];
       setProducts(data.length > 0 ? data : MOCK);
     }).catch(() => setProducts(MOCK));
   }, []);

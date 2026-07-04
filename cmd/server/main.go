@@ -72,8 +72,9 @@ func main() {
 	auth.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
 	auth.HandleFunc("/reset-password", userHandler.ResetPassword).Methods("POST")
 
-	// Public product routes
+	// Public product routes (brands раньше {id}, чтобы не перехватывался)
 	r.HandleFunc("/api/products", productHandler.GetAll).Methods("GET")
+	r.HandleFunc("/api/products/brands", productHandler.GetBrands).Methods("GET")
 	r.HandleFunc("/api/products/{id}", productHandler.GetByID).Methods("GET")
 
 	// Static files (uploaded images)

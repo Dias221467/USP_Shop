@@ -66,4 +66,15 @@ type ProductFilter struct {
 	MaxPrice   float64  `json:"max_price"`
 	Size       string   `json:"size"`
 	Discounted bool     `json:"discounted"`
+	Search     string   `json:"search"`
+	Sort       string   `json:"sort"`  // new | price_asc | price_desc
+	Page       int      `json:"page"`  // с 1
+	Limit      int      `json:"limit"` // 0 = без пагинации (все)
+}
+
+type ProductList struct {
+	Items      []Product `json:"items"`
+	Total      int64     `json:"total"`
+	Page       int       `json:"page"`
+	TotalPages int       `json:"total_pages"`
 }

@@ -12,17 +12,6 @@ import { Product } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-const MOCK_PRODUCTS: Product[] = [
-  { id: 'm1', name: 'Nike SB Dunk Low', brand: 'Nike', price: 89000, category: 'shoes', images: ['/sneakers/nike-sb-dunk-black.jpg'], sizes: ['40','41','42','43','44'], colors: ['Black/White'], stock: 5, description: '', is_active: true },
-  { id: 'm2', name: 'Adidas Samba OG', brand: 'Adidas', price: 79000, category: 'shoes', images: ['/sneakers/adidas-samba-white.jpg'], sizes: ['39','40','41','42','43'], colors: ['White/Black'], stock: 8, description: '', is_active: true },
-  { id: 'm3', name: 'Air Jordan 1 Low', brand: 'Jordan', price: 95000, category: 'shoes', images: ['/sneakers/air-jordan-1-low-sage.jpg'], sizes: ['40','41','42','43','44','45'], colors: ['Sage/White'], stock: 3, description: '', is_active: true },
-  { id: 'm4', name: 'Nike P-6000', brand: 'Nike', price: 72000, category: 'shoes', images: ['/sneakers/nike-p6000-black.jpg'], sizes: ['41','42','43','44'], colors: ['Black/Gold'], stock: 6, description: '', is_active: true },
-  { id: 'm5', name: 'Adidas Samba OG', brand: 'Adidas', price: 79000, category: 'shoes', images: ['/sneakers/adidas-samba-black.jpg'], sizes: ['39','40','41','42','43'], colors: ['Black/White'], stock: 4, description: '', is_active: true },
-  { id: 'm6', name: 'New Balance 1906D', brand: 'New Balance', price: 85000, category: 'shoes', images: ['/sneakers/new-balance-1906d.jpg'], sizes: ['40','41','42','43','44'], colors: ['Grey'], stock: 2, description: '', is_active: true },
-  { id: 'm7', name: 'Adidas Centennial 85', brand: 'Adidas', price: 68000, category: 'shoes', images: ['/sneakers/adidas-centennial-cream.jpg'], sizes: ['40','41','42','43'], colors: ['Cream/Black'], stock: 7, description: '', is_active: true },
-  { id: 'm8', name: 'ASICS GEL-NYC', brand: 'ASICS', price: 82000, category: 'shoes', images: ['/sneakers/asics-gel-nyc.jpg'], sizes: ['40','41','42','43','44'], colors: ['Grey/White'], stock: 0, description: '', is_active: true },
-];
-
 const FILTERS = [
   { label: 'Все', value: '' },
   { label: 'Обувь', value: 'shoes' },
@@ -36,6 +25,7 @@ const SORTS = [
 ];
 
 const NEW_DAYS = 14;
+const PAGE_SIZE = 24;
 
 function isNew(p: Product): boolean {
   if (!p.created_at) return false;
@@ -47,10 +37,15 @@ function CatalogContent() {
   const categoryParam = searchParams.get('category') || '';
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [brands, setBrands] = useState<string[]>([]);
   const [category, setCategory] = useState(categoryParam);
   const [brand, setBrand] = useState('');
   const [sort, setSort] = useState('new');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
@@ -62,40 +57,70 @@ function CatalogContent() {
     return () => window.removeEventListener('favUpdate', sync);
   }, []);
 
+  // Список брендов для кнопок — один раз
+  useEffect(() => {
+    api.get('/api/products/brands')
+      .then((res) => setBrands(res.data || []))
+      .catch(() => setBrands([]));
+  }, []);
+
   useEffect(() => {
     setCategory(categoryParam);
     setBrand('');
+    setPage(1);
   }, [categoryParam]);
 
+  // Поиск с задержкой, чтобы не слать запрос на каждую букву
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Смена фильтров — возврат на первую страницу
+  useEffect(() => {
+    setPage(1);
+  }, [category, brand, debouncedSearch, sort]);
+
+  // Основной запрос: все фильтры и пагинация на бэке
   useEffect(() => {
     setLoading(true);
-    const url = category ? `/api/products?category=${category}` : '/api/products';
-    api.get(url)
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (brand) params.set('brand', brand);
+    if (debouncedSearch) params.set('search', debouncedSearch);
+    if (sort !== 'new') params.set('sort', sort);
+    params.set('page', String(page));
+    params.set('limit', String(PAGE_SIZE));
+
+    api.get(`/api/products?${params.toString()}`)
       .then((res) => {
-        const data = res.data || [];
-        setProducts(data.length > 0 ? data : MOCK_PRODUCTS);
+        setProducts(res.data?.items || []);
+        setTotal(res.data?.total || 0);
+        setTotalPages(res.data?.total_pages || 1);
       })
-      .catch(() => setProducts(MOCK_PRODUCTS))
+      .catch(() => {
+        setProducts([]);
+        setTotal(0);
+        setTotalPages(1);
+      })
       .finally(() => setLoading(false));
-  }, [category]);
+  }, [category, brand, debouncedSearch, sort, page]);
 
-  const brands = useMemo(() => {
-    const set = new Set(products.map((p) => p.brand).filter(Boolean));
-    return Array.from(set).sort();
-  }, [products]);
+  const goToPage = (p: number) => {
+    setPage(p);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  const visible = useMemo(() => {
-    let list = [...products];
-    if (brand) list = list.filter((p) => p.brand === brand);
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q));
-    }
-    if (sort === 'price_asc') list.sort((a, b) => a.price - b.price);
-    else if (sort === 'price_desc') list.sort((a, b) => b.price - a.price);
-    // 'new' — порядок с бэкенда (created_at desc)
-    return list;
-  }, [products, brand, search, sort]);
+  // Номера страниц: все если мало, иначе с многоточиями вокруг текущей
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | '...')[] = [1];
+    if (page > 3) pages.push('...');
+    for (let p = Math.max(2, page - 1); p <= Math.min(totalPages - 1, page + 1); p++) pages.push(p);
+    if (page < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  }, [page, totalPages]);
 
   const onToggleFav = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
@@ -119,7 +144,7 @@ function CatalogContent() {
               <h1 className="text-5xl md:text-7xl lg:text-8xl tracking-tight">Каталог</h1>
               {!loading && (
                 <p className="text-black/30 text-sm pb-2">
-                  {visible.length} {visible.length === 1 ? 'товар' : visible.length < 5 ? 'товара' : 'товаров'}
+                  {total} {total === 1 ? 'товар' : total < 5 ? 'товара' : 'товаров'}
                 </p>
               )}
             </div>
@@ -195,13 +220,14 @@ function CatalogContent() {
                 <div key={i} className="aspect-[4/5] rounded-3xl bg-black/4 border border-black/5 animate-pulse" />
               ))}
             </div>
-          ) : visible.length === 0 ? (
+          ) : products.length === 0 ? (
             <div className="text-center py-40">
               <p className="text-4xl font-light opacity-20">Товары не найдены</p>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {visible.map((product, index) => {
+              {products.map((product, index) => {
                 const imageUrl = product.images?.[0]
                   ? product.images[0].startsWith('http')
                     ? product.images[0]
@@ -303,6 +329,42 @@ function CatalogContent() {
                 );
               })}
             </div>
+
+            {/* Пагинация */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-16">
+                <button
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-full text-sm bg-black/5 hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  ←
+                </button>
+                {pageNumbers.map((p, i) =>
+                  p === '...' ? (
+                    <span key={`dots-${i}`} className="px-2 text-black/30 text-sm">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p)}
+                      className={`w-10 h-10 rounded-full text-sm transition-all ${
+                        page === p ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+                <button
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-full text-sm bg-black/5 hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  →
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>

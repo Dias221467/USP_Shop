@@ -16,7 +16,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     api.get('/api/products?discounted=true')
-      .then((res) => setProducts(res.data || []))
+      .then((res) => setProducts(res.data?.items || []))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);

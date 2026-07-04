@@ -25,6 +25,8 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		Category: models.Category(q.Get("category")),
 		Brand:    q.Get("brand"),
 		Size:     q.Get("size"),
+		Search:   q.Get("search"),
+		Sort:     q.Get("sort"),
 	}
 	if v := q.Get("min_price"); v != "" {
 		filter.MinPrice, _ = strconv.ParseFloat(v, 64)
@@ -35,13 +37,29 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	if q.Get("discounted") == "true" {
 		filter.Discounted = true
 	}
+	if v := q.Get("page"); v != "" {
+		filter.Page, _ = strconv.Atoi(v)
+	}
+	if v := q.Get("limit"); v != "" {
+		filter.Limit, _ = strconv.Atoi(v)
+	}
 
-	products, err := h.service.GetAll(r.Context(), filter)
+	list, err := h.service.GetAll(r.Context(), filter)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, products)
+	respondJSON(w, http.StatusOK, list)
+}
+
+// GET /api/products/brands
+func (h *ProductHandler) GetBrands(w http.ResponseWriter, r *http.Request) {
+	brands, err := h.service.GetBrands(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, brands)
 }
 
 // GET /api/products/{id}

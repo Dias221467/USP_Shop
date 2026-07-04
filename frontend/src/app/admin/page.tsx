@@ -97,7 +97,7 @@ export default function AdminPage() {
         api.get('/api/products'),
         api.get('/api/admin/orders'),
       ]);
-      setProducts(pRes.status === 'fulfilled' ? pRes.value.data || [] : []);
+      setProducts(pRes.status === 'fulfilled' ? pRes.value.data?.items || [] : []);
       setOrders(oRes.status === 'fulfilled' ? oRes.value.data || [] : []);
     } finally {
       setLoading(false);

@@ -24,7 +24,7 @@ export default function FavoritesPage() {
       return;
     }
     api.get('/api/products')
-      .then((res) => setProducts((res.data || []).filter((p: Product) => ids.includes(p.id))))
+      .then((res) => setProducts((res.data?.items || []).filter((p: Product) => ids.includes(p.id))))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);

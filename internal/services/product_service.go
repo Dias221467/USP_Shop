@@ -50,8 +50,37 @@ func (s *ProductService) GetByID(ctx context.Context, id string) (*models.Produc
 	return s.repo.FindByID(ctx, id)
 }
 
-func (s *ProductService) GetAll(ctx context.Context, filter models.ProductFilter) ([]models.Product, error) {
-	return s.repo.FindAll(ctx, filter)
+func (s *ProductService) GetAll(ctx context.Context, filter models.ProductFilter) (*models.ProductList, error) {
+	products, total, err := s.repo.FindAll(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	if products == nil {
+		products = []models.Product{}
+	}
+
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	totalPages := 1
+	if filter.Limit > 0 {
+		totalPages = int((total + int64(filter.Limit) - 1) / int64(filter.Limit))
+		if totalPages < 1 {
+			totalPages = 1
+		}
+	}
+
+	return &models.ProductList{
+		Items:      products,
+		Total:      total,
+		Page:       page,
+		TotalPages: totalPages,
+	}, nil
+}
+
+func (s *ProductService) GetBrands(ctx context.Context) ([]string, error) {
+	return s.repo.Brands(ctx)
 }
 
 func (s *ProductService) Update(ctx context.Context, id string, req models.ProductRequest) (*models.Product, error) {
