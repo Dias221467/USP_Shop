@@ -82,6 +82,16 @@ func (h *OrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, orders)
 }
 
+// GET /api/admin/stats
+func (h *OrderHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.service.GetStats(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusOK, stats)
+}
+
 // PATCH /api/admin/orders/{id}/status
 func (h *OrderHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]

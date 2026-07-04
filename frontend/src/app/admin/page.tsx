@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, X, Upload, Package, ShoppingBag } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Upload, Package, ShoppingBag, BarChart3, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import api from '@/lib/api';
@@ -34,7 +34,16 @@ function SortableImage({ id, src, onRemove }: { id: string; src: string; onRemov
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-type Tab = 'products' | 'orders';
+type Tab = 'products' | 'orders' | 'stats';
+
+interface AdminStats {
+  day: { orders: number; revenue: number };
+  week: { orders: number; revenue: number };
+  month: { orders: number; revenue: number };
+  all: { orders: number; revenue: number };
+  status_counts: Record<string, number>;
+  top_products: { name: string; qty: number; revenue: number }[];
+}
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Ожидает',
@@ -63,6 +72,8 @@ export default function AdminPage() {
   const [productCat, setProductCat] = useState<'shoes' | 'clothing'>('shoes');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [productSearch, setProductSearch] = useState('');
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -93,16 +104,31 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pRes, oRes] = await Promise.allSettled([
+      const [pRes, oRes, sRes] = await Promise.allSettled([
         api.get('/api/products'),
         api.get('/api/admin/orders'),
+        api.get('/api/admin/stats'),
       ]);
       setProducts(pRes.status === 'fulfilled' ? pRes.value.data?.items || [] : []);
       setOrders(oRes.status === 'fulfilled' ? oRes.value.data || [] : []);
+      setStats(sRes.status === 'fulfilled' ? sRes.value.data : null);
     } finally {
       setLoading(false);
     }
   };
+
+  // Поиск товаров через бэк (с задержкой, чтобы не слать запрос на каждую букву)
+  const searchMounted = useRef(false);
+  useEffect(() => {
+    if (!searchMounted.current) { searchMounted.current = true; return; }
+    const t = setTimeout(() => {
+      const q = productSearch.trim();
+      api.get(q ? `/api/products?search=${encodeURIComponent(q)}` : '/api/products')
+        .then((res) => setProducts(res.data?.items || []))
+        .catch(() => {});
+    }, 350);
+    return () => clearTimeout(t);
+  }, [productSearch]);
 
   const openAdd = () => { setEditProduct(null); setForm(EMPTY_FORM); setShowModal(true); };
   const openEdit = (p: Product) => {
@@ -249,7 +275,7 @@ export default function AdminPage() {
 
           {/* Табы */}
           <div className="flex gap-1 p-1 bg-black/5 rounded-xl mb-8 w-fit">
-            {([['products', 'Товары', Package], ['orders', 'Заказы', ShoppingBag]] as const).map(([key, label, Icon]) => (
+            {([['products', 'Товары', Package], ['orders', 'Заказы', ShoppingBag], ['stats', 'Статистика', BarChart3]] as const).map(([key, label, Icon]) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
@@ -259,9 +285,11 @@ export default function AdminPage() {
               >
                 <Icon className="w-4 h-4" />
                 {label}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === key ? 'bg-white/20' : 'bg-black/10'}`}>
-                  {key === 'products' ? products.length : orders.length}
-                </span>
+                {key !== 'stats' && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === key ? 'bg-white/20' : 'bg-black/10'}`}>
+                    {key === 'products' ? products.length : orders.length}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -273,6 +301,15 @@ export default function AdminPage() {
           ) : tab === 'products' ? (
             /* ── Товары ── */
             <div className="flex flex-col gap-4">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black/30" />
+                <input
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Поиск по названию или бренду..."
+                  className="w-full bg-white border border-black/10 rounded-xl pl-11 pr-4 py-2.5 text-sm outline-none focus:border-black/30 transition-colors"
+                />
+              </div>
               <div className="flex gap-2">
                 {([['shoes', 'Обувь'], ['clothing', 'Одежда']] as const).map(([cat, label]) => (
                   <button key={cat} onClick={() => setProductCat(cat)}
@@ -331,7 +368,7 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
-          ) : (
+          ) : tab === 'orders' ? (
             /* ── Заказы ── */
             <div className="flex flex-col gap-3">
               {orders.length === 0 && (
@@ -385,6 +422,62 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          ) : (
+            /* ── Статистика ── */
+            !stats ? (
+              <div className="text-center py-20 text-black/30">Не удалось загрузить статистику</div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {/* Периоды */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {([
+                    ['За 24 часа', stats.day],
+                    ['За 7 дней', stats.week],
+                    ['За 30 дней', stats.month],
+                    ['За всё время', stats.all],
+                  ] as const).map(([label, p]) => (
+                    <div key={label} className="bg-white rounded-2xl p-5 border border-black/5">
+                      <p className="text-xs uppercase tracking-widest text-black/40 mb-2">{label}</p>
+                      <p className="text-2xl font-light">₸{p.revenue.toLocaleString()}</p>
+                      <p className="text-xs text-black/40 mt-1">
+                        {p.orders} {p.orders === 1 ? 'заказ' : p.orders < 5 ? 'заказа' : 'заказов'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Статусы заказов */}
+                <div className="bg-white rounded-2xl p-5 border border-black/5">
+                  <p className="text-xs uppercase tracking-widest text-black/40 mb-3">Заказы по статусам</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                      <span key={v} className={`text-xs px-3 py-1.5 rounded-full font-medium ${STATUS_COLORS[v] || 'bg-black/5'}`}>
+                        {l}: {stats.status_counts[v] || 0}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Топ товаров */}
+                <div className="bg-white rounded-2xl p-5 border border-black/5">
+                  <p className="text-xs uppercase tracking-widest text-black/40 mb-3">Топ товаров по продажам</p>
+                  {stats.top_products.length === 0 ? (
+                    <p className="text-sm text-black/30">Продаж пока нет</p>
+                  ) : (
+                    <div className="flex flex-col">
+                      {stats.top_products.map((tp, i) => (
+                        <div key={tp.name} className="flex items-center gap-3 py-2.5 border-b border-black/5 last:border-0">
+                          <span className="w-6 h-6 rounded-full bg-black/5 flex items-center justify-center text-xs flex-shrink-0">{i + 1}</span>
+                          <span className="text-sm flex-1 truncate">{tp.name}</span>
+                          <span className="text-xs text-black/40 whitespace-nowrap">{tp.qty} шт.</span>
+                          <span className="text-sm whitespace-nowrap font-medium">₸{tp.revenue.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
           )}
         </div>
       </div>

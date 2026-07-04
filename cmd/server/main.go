@@ -109,6 +109,7 @@ func main() {
 	admin.HandleFunc("/products/{id}", productHandler.Patch).Methods("PATCH")
 	admin.HandleFunc("/products/{id}", productHandler.Delete).Methods("DELETE")
 	admin.HandleFunc("/orders", orderHandler.GetAll).Methods("GET")
+	admin.HandleFunc("/stats", orderHandler.GetStats).Methods("GET")
 	admin.HandleFunc("/orders/{id}/status", orderHandler.UpdateStatus).Methods("PATCH")
 	admin.HandleFunc("/upload", uploadHandler.UploadImage).Methods("POST")
 	admin.HandleFunc("/import/preview", importHandler.Preview).Methods("POST")

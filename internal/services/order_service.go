@@ -216,6 +216,10 @@ func (s *OrderService) GetAllOrders(ctx context.Context) ([]models.Order, error)
 	return s.orderRepo.FindAll(ctx)
 }
 
+func (s *OrderService) GetStats(ctx context.Context) (*models.AdminStats, error) {
+	return s.orderRepo.Stats(ctx)
+}
+
 func (s *OrderService) UpdateStatus(ctx context.Context, orderID string, req models.UpdateOrderStatusRequest) error {
 	validStatuses := map[models.OrderStatus]bool{
 		models.OrderStatusPending:   true,

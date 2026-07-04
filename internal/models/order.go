@@ -66,3 +66,23 @@ type CreateOrderRequest struct {
 type UpdateOrderStatusRequest struct {
 	Status OrderStatus `json:"status"`
 }
+
+type PeriodStats struct {
+	Orders  int64   `json:"orders"`
+	Revenue float64 `json:"revenue"`
+}
+
+type TopProduct struct {
+	Name    string  `json:"name" bson:"_id"`
+	Qty     int64   `json:"qty" bson:"qty"`
+	Revenue float64 `json:"revenue" bson:"revenue"`
+}
+
+type AdminStats struct {
+	Day          PeriodStats      `json:"day"`
+	Week         PeriodStats      `json:"week"`
+	Month        PeriodStats      `json:"month"`
+	All          PeriodStats      `json:"all"`
+	StatusCounts map[string]int64 `json:"status_counts"`
+	TopProducts  []TopProduct     `json:"top_products"`
+}
