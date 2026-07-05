@@ -49,13 +49,15 @@ export function HeroCarousel() {
         <AnimatePresence mode="wait">
           <motion.div
             key={`wm-${slide.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, scale: 1.06 }}
+            animate={{ opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.65, 0, 0.35, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
             className="absolute inset-0 flex items-center justify-center pointer-events-none select-none"
           >
-            <span className="text-[4rem] md:text-[7rem] font-black text-black/[0.05] whitespace-nowrap">
+            <span
+              className="font-black text-black/[0.07] whitespace-nowrap tracking-tight"
+              style={{ fontSize: `min(11rem, ${120 / slide.watermark.length}vw)` }}
+            >
               {slide.watermark}
             </span>
           </motion.div>
@@ -70,9 +72,8 @@ export function HeroCarousel() {
           <motion.div
             key={`img-${slide.id}`}
             initial={{ x: direction * 300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: direction * -300, opacity: 0 }}
-            transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1] }}
+            animate={{ x: 0, opacity: 1, transition: { duration: 0.75, delay: 0.25, ease: [0.65, 0, 0.35, 1] } }}
+            exit={{ x: direction * -300, opacity: 0, transition: { duration: 0.45, ease: [0.65, 0, 0.35, 1] } }}
             className="w-full max-w-xl md:max-w-2xl px-10 md:px-16 relative z-10"
           >
             <img src={slide.image} alt={slide.model} className="w-full h-auto object-contain" loading="eager" />

@@ -24,3 +24,6 @@ vendor/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code local config (kept on disk, not tracked)
+frontend/CLAUDE.md
