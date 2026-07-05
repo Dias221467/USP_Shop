@@ -11,6 +11,7 @@ interface CartItem {
   product_id: string;
   name: string;
   price: number;
+  old_price?: number;
   size: string;
   color: string;
   quantity: number;
@@ -110,16 +111,18 @@ export default function CartPage() {
                       transition={{ duration: 0.3 }}
                       className="flex gap-5 p-4 rounded-2xl bg-black/[0.02] hover:bg-black/[0.04] transition-colors"
                     >
-                      <div className="w-28 h-28 rounded-xl bg-[#f0f0f0] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <Link href={`/product/${item.product_id}`} className="w-28 h-28 rounded-xl bg-[#f0f0f0] flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
                         ) : (
                           <span className="text-xl font-black opacity-10">USP</span>
                         )}
-                      </div>
+                      </Link>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-light text-base leading-snug mb-1 truncate">{item.name}</h3>
+                        <Link href={`/product/${item.product_id}`} className="block hover:opacity-60 transition-opacity">
+                          <h3 className="font-light text-base leading-snug mb-1 truncate">{item.name}</h3>
+                        </Link>
                         <p className="text-sm  mb-3">
                           {item.size && `Размер: ${item.size}`}
                           {item.size && item.color && ' · '}
@@ -142,7 +145,14 @@ export default function CartPage() {
                               +
                             </button>
                           </div>
-                          <p className="font-light">₸{item.subtotal.toLocaleString()}</p>
+                          {item.old_price && item.old_price > item.price ? (
+                            <p className="font-light">
+                              <span className="text-red-500">₸{item.subtotal.toLocaleString()}</span>{' '}
+                              <span className="line-through text-black/30 text-sm">₸{(item.old_price * item.quantity).toLocaleString()}</span>
+                            </p>
+                          ) : (
+                            <p className="font-light">₸{item.subtotal.toLocaleString()}</p>
+                          )}
                         </div>
                       </div>
 

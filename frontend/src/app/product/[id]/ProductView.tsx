@@ -64,6 +64,7 @@ export function ProductView({ id }: { id: string }) {
         product_id: product.id,
         name: product.name,
         price: product.price,
+        old_price: product.old_price && product.old_price > product.price ? product.old_price : undefined,
         size: selectedSize,
         color: selectedColor,
         quantity: 1,

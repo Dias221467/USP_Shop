@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
+
+const manrope = Manrope({
+  subsets: ["latin", "cyrillic"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="ru" className={manrope.className}>
       <body className="antialiased">{children}</body>
     </html>
   );

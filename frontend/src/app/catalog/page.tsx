@@ -235,7 +235,7 @@ function CatalogContent() {
                 const fav = favs.includes(product.id);
 
                 return (
-                  <div key={product.id} className={product.stock === 0 ? 'cursor-default' : ''}>
+                  <div key={product.id}>
                     {product.stock > 0 ? (
                       <Link href={`/product/${product.id}`}>
                     <motion.div
@@ -308,7 +308,8 @@ function CatalogContent() {
                     </motion.div>
                       </Link>
                     ) : (
-                      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.05 }}>
+                      <Link href={`/product/${product.id}`}>
+                      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: index * 0.05 }} className="cursor-pointer group">
                         <div className="aspect-[4/5] rounded-3xl overflow-hidden bg-white border border-black/8 relative" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                           <div className="absolute inset-0 flex items-center justify-center p-10">
                             {imageUrl ? (
@@ -323,6 +324,12 @@ function CatalogContent() {
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className="bg-black/80 text-white text-xs px-4 py-1.5 rounded-full">Нет в наличии</span>
                           </div>
+                          <button
+                            onClick={(e) => onToggleFav(e, product.id)}
+                            className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur flex items-center justify-center hover:scale-110 transition-transform"
+                          >
+                            <Heart className={`w-4 h-4 ${fav ? 'fill-red-500 text-red-500' : 'text-black/40'}`} />
+                          </button>
                         </div>
                         <div className="mt-4 px-1">
                           <p className="text-xs uppercase tracking-widest mb-1 text-black/40">{product.brand}</p>
@@ -330,6 +337,7 @@ function CatalogContent() {
                           <p className="font-light text-black/40">₸{product.price.toLocaleString()}</p>
                         </div>
                       </motion.div>
+                      </Link>
                     )}
                   </div>
                 );

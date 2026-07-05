@@ -2,46 +2,90 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import api from '@/lib/api';
+import { Product } from '@/types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface Slide {
-  id: number;
+  id: string;
   image: string;
   model: string;
   watermark: string;
-  accent?: string;
+  price?: number;
+  oldPrice?: number;
+  href: string;
 }
 
-const slides: Slide[] = [
-  { id: 1, image: '/sneakers/nike-sb-dunk-black.jpg', model: 'NIKE SB DUNK LOW', watermark: 'SB DUNK' },
-  { id: 2, image: '/sneakers/adidas-samba-white.jpg', model: 'ADIDAS SAMBA OG', watermark: 'SAMBA' },
-  { id: 3, image: '/sneakers/air-jordan-1-low-sage.jpg', model: 'AIR JORDAN 1 LOW', watermark: 'AJ1' },
-  { id: 4, image: '/sneakers/nike-p6000-black.jpg', model: 'NIKE P-6000', watermark: 'P-6000', accent: '#d4af37' },
-  { id: 5, image: '/sneakers/adidas-samba-black.jpg', model: 'ADIDAS SAMBA OG', watermark: 'SAMBA' },
-  { id: 6, image: '/sneakers/new-balance-1906d.jpg', model: 'NEW BALANCE 1906D', watermark: '1906D' },
-  { id: 7, image: '/sneakers/adidas-centennial-cream.jpg', model: 'ADIDAS CENTENNIAL 85', watermark: 'CENTENNIAL' },
+// Запасные слайды, если API недоступен или товаров нет
+const FALLBACK_SLIDES: Slide[] = [
+  { id: 'f1', image: '/sneakers/nike-sb-dunk-black.jpg', model: 'NIKE SB DUNK LOW', watermark: 'SB DUNK', href: '/catalog' },
+  { id: 'f2', image: '/sneakers/adidas-samba-white.jpg', model: 'ADIDAS SAMBA OG', watermark: 'SAMBA', href: '/catalog' },
+  { id: 'f3', image: '/sneakers/air-jordan-1-low-sage.jpg', model: 'AIR JORDAN 1 LOW', watermark: 'AJ1', href: '/catalog' },
 ];
 
+// Из «Nike Air Force 1 '07 Triple White» делаем короткий водяной знак «AIR FORCE»
+function makeWatermark(name: string, brand: string): string {
+  let base = name;
+  if (brand && base.toLowerCase().startsWith(brand.toLowerCase())) {
+    base = base.slice(brand.length).trim();
+  }
+  const words = base.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return brand.toUpperCase();
+  let result = words[0];
+  for (let i = 1; i < words.length; i++) {
+    if ((result + ' ' + words[i]).length > 12) break;
+    result += ' ' + words[i];
+  }
+  return result.toUpperCase();
+}
+
 export function HeroCarousel() {
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    api.get('/api/products?limit=8')
+      .then((res) => {
+        const products: Product[] = (res.data?.items || []).filter((p: Product) => p.stock > 0 && p.images?.length);
+        const real: Slide[] = products.slice(0, 6).map((p) => ({
+          id: p.id,
+          image: p.images[0].startsWith('http') ? p.images[0] : `${API_URL}${p.images[0]}`,
+          model: p.name,
+          watermark: makeWatermark(p.name, p.brand),
+          price: p.price,
+          oldPrice: p.old_price && p.old_price > p.price ? p.old_price : undefined,
+          href: `/product/${p.id}`,
+        }));
+        setSlides(real.length > 0 ? real : FALLBACK_SLIDES);
+      })
+      .catch(() => setSlides(FALLBACK_SLIDES));
+  }, []);
 
   const resetTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setDirection(1);
-      setCurrent((c) => (c === slides.length - 1 ? 0 : c + 1));
+      setCurrent((c) => (slides.length === 0 ? 0 : (c === slides.length - 1 ? 0 : c + 1)));
     }, 5000);
   };
 
   useEffect(() => {
+    if (slides.length === 0) return;
     resetTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+  }, [slides.length]);
+
+  if (slides.length === 0) {
+    return <div className="w-full h-screen bg-[#f7f7f5]" />;
+  }
 
   const prev = () => { setDirection(-1); setCurrent((c) => (c === 0 ? slides.length - 1 : c - 1)); resetTimer(); };
   const next = () => { setDirection(1); setCurrent((c) => (c === slides.length - 1 ? 0 : c + 1)); resetTimer(); };
-  const slide = slides[current];
+  const slide = slides[Math.min(current, slides.length - 1)];
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-[#f7f7f5]">
@@ -76,7 +120,14 @@ export function HeroCarousel() {
             exit={{ x: direction * -300, opacity: 0, transition: { duration: 0.45, ease: [0.65, 0, 0.35, 1] } }}
             className="w-full max-w-xl md:max-w-2xl px-10 md:px-16 relative z-10"
           >
-            <img src={slide.image} alt={slide.model} className="w-full h-auto object-contain" loading="eager" />
+            <Link href={slide.href}>
+              <img
+                src={slide.image}
+                alt={slide.model}
+                className="w-full h-auto max-h-[55vh] object-contain mix-blend-multiply cursor-pointer"
+                loading="eager"
+              />
+            </Link>
           </motion.div>
         </AnimatePresence>
 
@@ -89,19 +140,27 @@ export function HeroCarousel() {
             transition={{ duration: 0.6, delay: 0.15, ease: [0.65, 0, 0.35, 1] }}
             className="absolute bottom-20 md:bottom-20 left-0 right-0 text-center z-20 px-8 space-y-3"
           >
-            <h2
-              className="text-xl md:text-3xl tracking-[0.2em] font-light uppercase"
-              style={{ color: slide.accent || '#222222' }}
-            >
+            <h2 className="text-lg md:text-2xl tracking-[0.2em] font-light uppercase text-[#222]">
               {slide.model}
             </h2>
-            <a
-              href="/catalog"
+            {slide.price !== undefined && (
+              <p className="text-base md:text-lg font-light">
+                {slide.oldPrice ? (
+                  <>
+                    <span className="text-red-500">₸{slide.price.toLocaleString()}</span>{' '}
+                    <span className="line-through text-black/30 text-sm">₸{slide.oldPrice.toLocaleString()}</span>
+                  </>
+                ) : (
+                  <span className="text-black/60">₸{slide.price.toLocaleString()}</span>
+                )}
+              </p>
+            )}
+            <Link
+              href={slide.href}
               className="inline-block px-6 py-2.5 rounded-full text-xs tracking-widest uppercase border border-black/20 hover:border-black/50 hover:bg-black hover:text-white transition-all duration-300"
-              style={{ color: slide.accent || undefined }}
             >
-              Смотреть в каталоге
-            </a>
+              {slide.href === '/catalog' ? 'Смотреть в каталоге' : 'Смотреть товар'}
+            </Link>
           </motion.div>
         </AnimatePresence>
       </div>

@@ -110,7 +110,8 @@ export function ProductGrid() {
                     </motion.div>
                   </Link>
                 ) : (
-                  <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ duration: 0.8, delay: index * 0.15 }}>
+                  <Link href={`/product/${product.id}`}>
+                  <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-100px' }} transition={{ duration: 0.8, delay: index * 0.15 }} className="cursor-pointer">
                     <div className="aspect-[4/5] rounded-3xl overflow-hidden relative bg-white border border-black/8" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                       <div className="absolute inset-0 flex items-center justify-center p-12">
                         <img src={imageUrl} alt={product.name} className="w-full h-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -126,6 +127,7 @@ export function ProductGrid() {
                       <p className="text-base text-black/30">₸{product.price.toLocaleString()}</p>
                     </div>
                   </motion.div>
+                  </Link>
                 )}
               </div>
             );
