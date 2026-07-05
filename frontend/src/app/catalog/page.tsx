@@ -57,12 +57,13 @@ function CatalogContent() {
     return () => window.removeEventListener('favUpdate', sync);
   }, []);
 
-  // Список брендов для кнопок — один раз
+  // Список брендов зависит от выбранной категории
   useEffect(() => {
-    api.get('/api/products/brands')
+    setBrand('');
+    api.get(category ? `/api/products/brands?category=${category}` : '/api/products/brands')
       .then((res) => setBrands(res.data || []))
       .catch(() => setBrands([]));
-  }, []);
+  }, [category]);
 
   useEffect(() => {
     setCategory(categoryParam);

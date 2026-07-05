@@ -113,9 +113,13 @@ func (r *ProductRepository) FindAll(ctx context.Context, filter models.ProductFi
 	return products, total, nil
 }
 
-// Brands возвращает список уникальных брендов активных товаров
-func (r *ProductRepository) Brands(ctx context.Context) ([]string, error) {
-	values, err := r.collection.Distinct(ctx, "brand", bson.M{"is_active": true})
+// Brands возвращает список уникальных брендов активных товаров (опционально по категории)
+func (r *ProductRepository) Brands(ctx context.Context, category models.Category) ([]string, error) {
+	filter := bson.M{"is_active": true}
+	if category != "" {
+		filter["category"] = category
+	}
+	values, err := r.collection.Distinct(ctx, "brand", filter)
 	if err != nil {
 		return nil, err
 	}

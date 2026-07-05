@@ -52,9 +52,9 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, list)
 }
 
-// GET /api/products/brands
+// GET /api/products/brands?category=shoes
 func (h *ProductHandler) GetBrands(w http.ResponseWriter, r *http.Request) {
-	brands, err := h.service.GetBrands(r.Context())
+	brands, err := h.service.GetBrands(r.Context(), models.Category(r.URL.Query().Get("category")))
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

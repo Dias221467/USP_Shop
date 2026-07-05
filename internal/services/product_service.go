@@ -79,8 +79,8 @@ func (s *ProductService) GetAll(ctx context.Context, filter models.ProductFilter
 	}, nil
 }
 
-func (s *ProductService) GetBrands(ctx context.Context) ([]string, error) {
-	return s.repo.Brands(ctx)
+func (s *ProductService) GetBrands(ctx context.Context, category models.Category) ([]string, error) {
+	return s.repo.Brands(ctx, category)
 }
 
 func (s *ProductService) Update(ctx context.Context, id string, req models.ProductRequest) (*models.Product, error) {
