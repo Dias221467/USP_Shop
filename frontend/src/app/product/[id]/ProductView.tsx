@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ShoppingBag, Check, Heart } from 'lucide-react';
 import Link from 'next/link';
@@ -22,10 +22,18 @@ export function ProductView({ id }: { id: string }) {
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
   const [fav, setFav] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setFav(isFavorite(id));
   }, [id]);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  };
 
   useEffect(() => {
     api.get(`/api/products/${id}`)
@@ -50,7 +58,7 @@ export function ProductView({ id }: { id: string }) {
     );
     const alreadyInCart = existing >= 0 ? cart.items[existing].quantity : 0;
     if (alreadyInCart >= maxForSize) {
-      alert(`Этого размера осталось только ${maxForSize} шт.`);
+      showToast(`Этого размера осталось только ${maxForSize} шт.`);
       return;
     }
     if (existing >= 0) {
@@ -347,6 +355,24 @@ export function ProductView({ id }: { id: string }) {
       </div>
 
       <Footer />
+
+      {/* Тост-уведомление */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-8 inset-x-0 z-50 flex justify-center pointer-events-none px-4"
+          >
+            <div className="bg-black text-white text-sm px-6 py-3.5 rounded-full shadow-xl">
+              {toast}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
