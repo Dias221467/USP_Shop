@@ -135,12 +135,28 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 		order.CustomerPhone = user.Phone
 	}
 
-	if err := s.orderRepo.Create(ctx, order); err != nil {
-		return nil, err
+	// Атомарно резервируем товар ДО создания заказа: если чего-то не хватило —
+	// возвращаем уже списанное и отклоняем заказ. Оверселл невозможен.
+	var reserved []models.OrderItem
+	rollback := func() {
+		for _, it := range reserved {
+			_ = s.productRepo.RestoreStock(ctx, it.ProductID.Hex(), it.Color, it.Size, it.Quantity)
+		}
+	}
+	for _, item := range items {
+		if err := s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity); err != nil {
+			rollback()
+			if errors.Is(err, repository.ErrInsufficientStock) {
+				return nil, fmt.Errorf("«%s» только что раскупили — обновите корзину", item.Name)
+			}
+			return nil, err
+		}
+		reserved = append(reserved, item)
 	}
 
-	for _, item := range items {
-		_ = s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity)
+	if err := s.orderRepo.Create(ctx, order); err != nil {
+		rollback()
+		return nil, err
 	}
 
 	// Уведомление в Telegram в фоне — заказ не ждёт отправку

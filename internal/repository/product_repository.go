@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"sort"
 	"strconv"
@@ -225,8 +226,97 @@ func (r *ProductRepository) UpdateColorStock(ctx context.Context, id string, col
 	return err
 }
 
+// ErrInsufficientStock — товара не хватает (кто-то успел купить раньше)
+var ErrInsufficientStock = errors.New("insufficient stock")
+
+// DecrementStock списывает товар атомарно: MongoDB одной операцией проверяет
+// «остаток >= qty» и уменьшает его. Два одновременных заказа последней пары
+// не пройдут оба — второй получит ErrInsufficientStock.
 func (r *ProductRepository) DecrementStock(ctx context.Context, id string, color string, size string, qty int) error {
-	return r.adjustStock(ctx, id, color, size, -qty)
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	p, err := r.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	var field string
+	switch {
+	case len(p.ColorStock) > 0 && color != "":
+		field = "color_stock." + strings.ToLower(color) + "." + size
+	case len(p.SizeStock) > 0 && size != "":
+		field = "size_stock." + size
+	default:
+		field = "stock"
+	}
+
+	update := bson.M{
+		"$inc": bson.M{field: -qty},
+		"$set": bson.M{"updated_at": time.Now()},
+	}
+	if field != "stock" {
+		// Общий остаток тоже уменьшаем, чтобы sum(размеры) == stock
+		update["$inc"].(bson.M)["stock"] = -qty
+	}
+
+	res, err := r.collection.UpdateOne(ctx,
+		bson.M{"_id": objID, field: bson.M{"$gte": qty}},
+		update,
+	)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return ErrInsufficientStock
+	}
+
+	// Обновляем список размеров (для фильтров/бейджей) — не критично, гонка тут безвредна
+	r.refreshSizes(ctx, objID)
+	return nil
+}
+
+// refreshSizes пересчитывает массив sizes после изменения остатков
+func (r *ProductRepository) refreshSizes(ctx context.Context, objID primitive.ObjectID) {
+	var p models.Product
+	if err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&p); err != nil {
+		return
+	}
+
+	var sizes []string
+	switch {
+	case len(p.ColorStock) > 0:
+		set := map[string]bool{}
+		for _, ss := range p.ColorStock {
+			for s, q := range ss {
+				if q > 0 {
+					set[s] = true
+				}
+			}
+		}
+		for s := range set {
+			sizes = append(sizes, s)
+		}
+		sortClothingSizes(sizes)
+	case len(p.SizeStock) > 0:
+		for s, q := range p.SizeStock {
+			if q > 0 {
+				sizes = append(sizes, s)
+			}
+		}
+		sort.Slice(sizes, func(i, j int) bool {
+			a, _ := strconv.Atoi(sizes[i])
+			b, _ := strconv.Atoi(sizes[j])
+			return a < b
+		})
+	default:
+		return
+	}
+	if sizes == nil {
+		sizes = []string{}
+	}
+	_, _ = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": bson.M{"sizes": sizes}})
 }
 
 // RestoreStock возвращает товар на склад (например, при отмене заказа)
