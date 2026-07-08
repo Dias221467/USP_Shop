@@ -101,12 +101,10 @@ func (s *UserService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		return nil, errors.New("email not verified")
 	}
 
-	newVersion, err := s.repo.IncrementTokenVersion(ctx, user.ID.Hex())
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := jwtutil.GenerateToken(user.ID.Hex(), string(user.Role), s.jwtSecret, newVersion)
+	// Версию токена при входе НЕ увеличиваем — можно быть залогиненным
+	// на нескольких устройствах одновременно. Версия растёт только
+	// при смене/сбросе пароля, чтобы разлогинить все старые сессии.
+	token, err := jwtutil.GenerateToken(user.ID.Hex(), string(user.Role), s.jwtSecret, user.TokenVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +191,13 @@ func (s *UserService) ResetPassword(ctx context.Context, token, newPassword stri
 		return err
 	}
 
-	return s.repo.UpdatePassword(ctx, user.ID.Hex(), string(hashed))
+	if err := s.repo.UpdatePassword(ctx, user.ID.Hex(), string(hashed)); err != nil {
+		return err
+	}
+
+	// Пароль сброшен — разлогиниваем все устройства
+	_, _ = s.repo.IncrementTokenVersion(ctx, user.ID.Hex())
+	return nil
 }
 
 func (s *UserService) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
@@ -215,7 +219,14 @@ func (s *UserService) ChangePassword(ctx context.Context, userID, currentPasswor
 		return err
 	}
 
-	return s.repo.UpdatePassword(ctx, userID, string(hashed))
+	if err := s.repo.UpdatePassword(ctx, userID, string(hashed)); err != nil {
+		return err
+	}
+
+	// Пароль изменён — разлогиниваем все устройства (включая текущее,
+	// пользователь войдёт заново с новым паролем)
+	_, _ = s.repo.IncrementTokenVersion(ctx, userID)
+	return nil
 }
 
 // ── Избранное ──
