@@ -6,24 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-
-interface CartItem {
-  product_id: string;
-  name: string;
-  price: number;
-  old_price?: number;
-  size: string;
-  color: string;
-  quantity: number;
-  max_qty?: number;
-  image: string;
-  subtotal: number;
-}
-
-interface CartState {
-  items: CartItem[];
-  total: number;
-}
+import { getCart, setQuantity, removeFromCart, CartItem, CartState } from '@/lib/cart';
 
 export default function CartPage() {
   const router = useRouter();
@@ -32,29 +15,18 @@ export default function CartPage() {
 
   useEffect(() => {
     setMounted(true);
-    const raw = localStorage.getItem('cart');
-    if (raw) setCart(JSON.parse(raw));
+    setCart(getCart());
+    const refresh = () => setCart(getCart());
+    window.addEventListener('cartUpdate', refresh);
+    return () => window.removeEventListener('cartUpdate', refresh);
   }, []);
 
-  const updateQty = (index: number, delta: number) => {
-    const updated = { ...cart };
-    const item = updated.items[index];
-    const max = item.max_qty ?? Infinity;
-    updated.items[index].quantity = Math.min(max, Math.max(1, item.quantity + delta));
-    updated.items[index].subtotal = updated.items[index].quantity * updated.items[index].price;
-    updated.total = updated.items.reduce((s, i) => s + i.subtotal, 0);
-    setCart(updated);
-    localStorage.setItem('cart', JSON.stringify(updated));
-    window.dispatchEvent(new Event('cartUpdate'));
+  const updateQty = (item: CartItem, delta: number) => {
+    setQuantity(item, item.quantity + delta);
   };
 
-  const remove = (index: number) => {
-    const updated = { ...cart };
-    updated.items.splice(index, 1);
-    updated.total = updated.items.reduce((s, i) => s + i.subtotal, 0);
-    setCart(updated);
-    localStorage.setItem('cart', JSON.stringify(updated));
-    window.dispatchEvent(new Event('cartUpdate'));
+  const remove = (item: CartItem) => {
+    removeFromCart(item);
   };
 
   const checkout = () => {
@@ -132,14 +104,14 @@ export default function CartPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => updateQty(i, -1)}
+                              onClick={() => updateQty(item, -1)}
                               className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 transition-colors flex items-center justify-center text-lg"
                             >
                               −
                             </button>
                             <span className="w-6 text-center">{item.quantity}</span>
                             <button
-                              onClick={() => updateQty(i, 1)}
+                              onClick={() => updateQty(item, 1)}
                               className="w-8 h-8 rounded-full bg-black/5 hover:bg-black/10 transition-colors flex items-center justify-center text-lg"
                             >
                               +
@@ -157,7 +129,7 @@ export default function CartPage() {
                       </div>
 
                       <button
-                        onClick={() => remove(i)}
+                        onClick={() => remove(item)}
                         className="self-start p-2 opacity-20 hover:opacity-60 transition-opacity"
                       >
                         <Trash2 className="w-4 h-4" />

@@ -10,9 +10,12 @@ type CartItem struct {
 	ProductID primitive.ObjectID `bson:"product_id" json:"product_id"`
 	Name      string             `bson:"name" json:"name"`
 	Price     float64            `bson:"price" json:"price"`
+	OldPrice  float64            `bson:"old_price,omitempty" json:"old_price,omitempty"`
 	Size      string             `bson:"size" json:"size"`
 	Color     string             `bson:"color" json:"color"`
 	Quantity  int                `bson:"quantity" json:"quantity"`
+	MaxQty    int                `bson:"max_qty,omitempty" json:"max_qty,omitempty"`
+	Image     string             `bson:"image,omitempty" json:"image,omitempty"`
 	Subtotal  float64            `bson:"subtotal" json:"subtotal"`
 }
 
@@ -35,5 +38,6 @@ type AddToCartRequest struct {
 type UpdateCartItemRequest struct {
 	ProductID string `json:"product_id"`
 	Size      string `json:"size"`
+	Color     string `json:"color"`
 	Quantity  int    `json:"quantity"`
 }

@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
@@ -10,6 +12,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+// availableQty — сколько штук доступно для конкретного цвета/размера
+func availableQty(p *models.Product, color, size string) int {
+	if len(p.ColorStock) > 0 && color != "" {
+		return p.ColorStock[strings.ToLower(color)][size]
+	}
+	if len(p.SizeStock) > 0 && size != "" {
+		return p.SizeStock[size]
+	}
+	return p.Stock
+}
 
 type CartService struct {
 	cartRepo    *repository.CartRepository
@@ -40,15 +53,10 @@ func (s *CartService) AddItem(ctx context.Context, userID string, req models.Add
 	if err != nil {
 		return nil, errors.New("product not found")
 	}
-	if product.Stock < req.Quantity {
-		return nil, errors.New("not enough stock")
-	}
 
-	if req.Size != "" && !containsSize(product.Sizes, req.Size) {
-		return nil, errors.New("size not available for this product")
-	}
-	if req.Color != "" && !containsColor(product.Colors, req.Color) {
-		return nil, errors.New("color not available for this product")
+	available := availableQty(product, req.Color, req.Size)
+	if available <= 0 {
+		return nil, fmt.Errorf("«%s» нет в наличии", product.Name)
 	}
 
 	cart, err := s.cartRepo.GetByUserID(ctx, userID)
@@ -65,26 +73,50 @@ func (s *CartService) AddItem(ctx context.Context, userID string, req models.Add
 		}
 	}
 
+	image := ""
+	if len(product.Images) > 0 {
+		image = product.Images[0]
+	}
+	oldPrice := 0.0
+	if product.OldPrice > product.Price {
+		oldPrice = product.OldPrice
+	}
+
 	productObjID, _ := primitive.ObjectIDFromHex(req.ProductID)
 	found := false
 	for i, item := range cart.Items {
 		if item.ProductID == productObjID && item.Size == req.Size && item.Color == req.Color {
-			cart.Items[i].Quantity += req.Quantity
-			cart.Items[i].Subtotal = float64(cart.Items[i].Quantity) * item.Price
+			newQty := item.Quantity + req.Quantity
+			if newQty > available {
+				newQty = available
+			}
+			cart.Items[i].Quantity = newQty
+			cart.Items[i].Price = product.Price
+			cart.Items[i].OldPrice = oldPrice
+			cart.Items[i].MaxQty = available
+			cart.Items[i].Image = image
+			cart.Items[i].Subtotal = float64(newQty) * product.Price
 			found = true
 			break
 		}
 	}
 
 	if !found {
+		qty := req.Quantity
+		if qty > available {
+			qty = available
+		}
 		cart.Items = append(cart.Items, models.CartItem{
 			ProductID: productObjID,
 			Name:      product.Name,
 			Price:     product.Price,
+			OldPrice:  oldPrice,
 			Size:      req.Size,
 			Color:     req.Color,
-			Quantity:  req.Quantity,
-			Subtotal:  float64(req.Quantity) * product.Price,
+			Quantity:  qty,
+			MaxQty:    available,
+			Image:     image,
+			Subtotal:  float64(qty) * product.Price,
 		})
 	}
 
@@ -108,12 +140,19 @@ func (s *CartService) UpdateItem(ctx context.Context, userID string, req models.
 	productObjID, _ := primitive.ObjectIDFromHex(req.ProductID)
 	found := false
 	for i, item := range cart.Items {
-		if item.ProductID == productObjID && item.Size == req.Size {
+		if item.ProductID == productObjID && item.Size == req.Size && item.Color == req.Color {
 			if req.Quantity == 0 {
 				cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
 			} else {
-				cart.Items[i].Quantity = req.Quantity
-				cart.Items[i].Subtotal = float64(req.Quantity) * item.Price
+				qty := req.Quantity
+				// Не даём поставить больше, чем есть на складе
+				if product, err := s.productRepo.FindByID(ctx, req.ProductID); err == nil {
+					if available := availableQty(product, req.Color, req.Size); qty > available {
+						qty = available
+					}
+				}
+				cart.Items[i].Quantity = qty
+				cart.Items[i].Subtotal = float64(qty) * item.Price
 			}
 			found = true
 			break
@@ -151,20 +190,3 @@ func calcTotal(items []models.CartItem) float64 {
 	return total
 }
 
-func containsSize(sizes []string, size string) bool {
-	for _, s := range sizes {
-		if s == size {
-			return true
-		}
-	}
-	return false
-}
-
-func containsColor(colors []string, color string) bool {
-	for _, c := range colors {
-		if c == color {
-			return true
-		}
-	}
-	return false
-}

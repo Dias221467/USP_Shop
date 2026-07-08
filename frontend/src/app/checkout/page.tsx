@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import api from '@/lib/api';
+import { clearCart } from '@/lib/cart';
 
 interface CartItem {
   product_id: string;
@@ -92,8 +93,7 @@ export default function CheckoutPage() {
         })),
       });
 
-      localStorage.removeItem('cart');
-      window.dispatchEvent(new CustomEvent('cartUpdate'));
+      clearCart();
       setOrderId(res.data.id);
       setDone(true);
     } catch (err: any) {

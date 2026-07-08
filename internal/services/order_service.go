@@ -159,6 +159,9 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 		return nil, err
 	}
 
+	// Заказ оформлен — серверная корзина больше не нужна
+	_ = s.cartRepo.Clear(ctx, userID)
+
 	// Уведомление в Telegram в фоне — заказ не ждёт отправку
 	go s.notifyNewOrder(order)
 

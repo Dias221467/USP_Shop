@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { syncFavorites } from '@/lib/favorites';
+import { syncCart } from '@/lib/cart';
 
 function getTokenRole(): string | null {
   try {
@@ -35,6 +36,7 @@ export function Header() {
   useEffect(() => {
     setIsAdmin(getTokenRole() === 'admin');
     syncFavorites();
+    syncCart();
   }, []);
 
   useEffect(() => {

@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import api from '@/lib/api';
 import { isFavorite, toggleFavorite } from '@/lib/favorites';
+import { addToCart as addItemToCart } from '@/lib/cart';
 import { Product } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -48,44 +49,27 @@ export function ProductView({ id }: { id: string }) {
 
   const addToCart = () => {
     if (!product || !selectedSize) return;
-    const cart = JSON.parse(localStorage.getItem('cart') || '{"items":[],"total":0}');
     const colorKey = selectedColor.toLowerCase();
-    const maxForSize = product.color_stock?.[colorKey]?.[selectedSize]
-      ?? product.size_stock?.[selectedSize]
-      ?? Infinity;
-    const existing = cart.items.findIndex(
-      (i: any) => i.product_id === product.id && i.size === selectedSize && i.color === selectedColor
-    );
-    const alreadyInCart = existing >= 0 ? cart.items[existing].quantity : 0;
-    if (alreadyInCart >= maxForSize) {
-      showToast(`Этого размера осталось только ${maxForSize} шт.`);
+    const sizeMax = product.color_stock?.[colorKey]?.[selectedSize]
+      ?? product.size_stock?.[selectedSize];
+
+    const ok = addItemToCart({
+      product_id: product.id,
+      name: product.name,
+      price: product.price,
+      old_price: product.old_price && product.old_price > product.price ? product.old_price : undefined,
+      size: selectedSize,
+      color: selectedColor,
+      image: images[activeImage] || images[0] || '',
+      max_qty: sizeMax ?? undefined,
+    });
+
+    if (!ok) {
+      showToast(`Этого размера осталось только ${sizeMax} шт.`);
       return;
     }
-    if (existing >= 0) {
-      cart.items[existing].quantity += 1;
-      cart.items[existing].subtotal = cart.items[existing].quantity * product.price;
-    } else {
-      const imageUrl = images[activeImage] || images[0] || '';
-      const sizeMax = product.color_stock?.[colorKey]?.[selectedSize]
-        ?? product.size_stock?.[selectedSize];
-      cart.items.push({
-        product_id: product.id,
-        name: product.name,
-        price: product.price,
-        old_price: product.old_price && product.old_price > product.price ? product.old_price : undefined,
-        size: selectedSize,
-        color: selectedColor,
-        quantity: 1,
-        image: imageUrl,
-        max_qty: sizeMax ?? undefined,
-        subtotal: product.price,
-      });
-    }
-    cart.total = cart.items.reduce((s: number, i: any) => s + i.subtotal, 0);
-    localStorage.setItem('cart', JSON.stringify(cart));
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
-    window.dispatchEvent(new Event('cartUpdate'));
   };
 
   if (loading) {
