@@ -228,8 +228,8 @@ func (s *OrderService) GetMyOrders(ctx context.Context, userID string) ([]models
 	return s.orderRepo.FindByUserID(ctx, userID)
 }
 
-func (s *OrderService) GetAllOrders(ctx context.Context, status models.OrderStatus, page, limit int) (*models.OrderList, error) {
-	orders, total, err := s.orderRepo.FindAll(ctx, status, page, limit)
+func (s *OrderService) GetAllOrders(ctx context.Context, status models.OrderStatus, page, limit int, archived bool) (*models.OrderList, error) {
+	orders, total, err := s.orderRepo.FindAll(ctx, status, page, limit, archived)
 	if err != nil {
 		return nil, err
 	}

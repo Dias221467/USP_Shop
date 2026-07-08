@@ -60,8 +60,11 @@ func (r *OrderRepository) FindByUserID(ctx context.Context, userID string) ([]mo
 	return orders, nil
 }
 
-func (r *OrderRepository) FindAll(ctx context.Context, status models.OrderStatus, page, limit int) ([]models.Order, int64, error) {
+func (r *OrderRepository) FindAll(ctx context.Context, status models.OrderStatus, page, limit int, archived bool) ([]models.Order, int64, error) {
 	query := bson.M{"archived": bson.M{"$ne": true}}
+	if archived {
+		query["archived"] = true
+	}
 	if status != "" {
 		query["status"] = status
 	}

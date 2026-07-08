@@ -78,6 +78,7 @@ export default function AdminPage() {
   const [orderPage, setOrderPage] = useState(1);
   const [ordersTotal, setOrdersTotal] = useState(0);
   const [ordersTotalPages, setOrdersTotalPages] = useState(1);
+  const [showArchived, setShowArchived] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -125,6 +126,7 @@ export default function AdminPage() {
     try {
       const params = new URLSearchParams();
       if (orderStatus) params.set('status', orderStatus);
+      if (showArchived) params.set('archived', 'true');
       params.set('page', String(orderPage));
       params.set('limit', String(ORDERS_PAGE_SIZE));
       const res = await api.get(`/api/admin/orders?${params.toString()}`);
@@ -139,7 +141,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authed) return;
     fetchOrders();
-  }, [authed, orderStatus, orderPage]);
+  }, [authed, orderStatus, orderPage, showArchived]);
 
   // Поиск товаров через бэк (с задержкой, чтобы не слать запрос на каждую букву)
   const searchMounted = useRef(false);
@@ -416,11 +418,25 @@ export default function AdminPage() {
                     {l}
                   </button>
                 ))}
+                <button
+                  onClick={() => { setShowArchived(!showArchived); setOrderPage(1); }}
+                  className={`px-4 py-1.5 rounded-full text-xs transition-all ml-auto ${
+                    showArchived ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                  }`}
+                >
+                  {showArchived ? '← К текущим' : 'Архив'}
+                </button>
               </div>
+
+              {showArchived && (
+                <p className="text-xs text-black/40 -mt-1 mb-1">
+                  Архив: доставленные и отменённые заказы старше 30 дней. Учитываются в статистике.
+                </p>
+              )}
 
               {orders.length === 0 && (
                 <div className="text-center py-20 text-black/30">
-                  {orderStatus ? 'Нет заказов с этим статусом' : 'Заказов пока нет'}
+                  {showArchived ? 'В архиве пусто' : orderStatus ? 'Нет заказов с этим статусом' : 'Заказов пока нет'}
                 </div>
               )}
               {orders.map((order) => (
