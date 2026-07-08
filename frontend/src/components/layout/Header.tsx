@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { syncFavorites } from '@/lib/favorites';
 
 function getTokenRole(): string | null {
   try {
@@ -33,6 +34,7 @@ export function Header() {
 
   useEffect(() => {
     setIsAdmin(getTokenRole() === 'admin');
+    syncFavorites();
   }, []);
 
   useEffect(() => {

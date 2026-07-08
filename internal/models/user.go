@@ -26,6 +26,7 @@ type User struct {
 	ResetToken        string             `bson:"reset_token,omitempty" json:"-"`
 	ResetTokenExp     time.Time          `bson:"reset_token_exp,omitempty" json:"-"`
 	TokenVersion      int                `bson:"token_version" json:"-"`
+	Favorites         []string           `bson:"favorites,omitempty" json:"-"`
 	CreatedAt         time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt         time.Time          `bson:"updated_at" json:"updated_at"`
 }

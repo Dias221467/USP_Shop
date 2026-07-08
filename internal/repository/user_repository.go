@@ -146,3 +146,54 @@ func (r *UserRepository) UpdatePassword(ctx context.Context, id string, hashedPa
 	})
 	return err
 }
+
+// ── Избранное ──
+
+func (r *UserRepository) GetFavorites(ctx context.Context, id string) ([]string, error) {
+	user, err := r.findByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if user.Favorites == nil {
+		return []string{}, nil
+	}
+	return user.Favorites, nil
+}
+
+func (r *UserRepository) AddFavorite(ctx context.Context, id string, productID string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$addToSet": bson.M{"favorites": productID},
+	})
+	return err
+}
+
+func (r *UserRepository) RemoveFavorite(ctx context.Context, id string, productID string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$pull": bson.M{"favorites": productID},
+	})
+	return err
+}
+
+// MergeFavorites добавляет локальные id к серверным и возвращает объединённый список
+func (r *UserRepository) MergeFavorites(ctx context.Context, id string, ids []string) ([]string, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+	if len(ids) > 0 {
+		if _, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+			"$addToSet": bson.M{"favorites": bson.M{"$each": ids}},
+		}); err != nil {
+			return nil, err
+		}
+	}
+	return r.GetFavorites(ctx, id)
+}

@@ -122,6 +122,12 @@ func main() {
 	api.HandleFunc("/orders/{id}/cancel", orderHandler.CancelOrder).Methods("PATCH")
 	api.HandleFunc("/support/me", supportHandler.GetVisitorInfo).Methods("GET")
 
+	// Избранное (sync раньше {productId}, чтобы не перехватывался)
+	api.HandleFunc("/favorites", userHandler.GetFavorites).Methods("GET")
+	api.HandleFunc("/favorites/sync", userHandler.SyncFavorites).Methods("POST")
+	api.HandleFunc("/favorites/{productId}", userHandler.AddFavorite).Methods("POST")
+	api.HandleFunc("/favorites/{productId}", userHandler.RemoveFavorite).Methods("DELETE")
+
 	// Admin routes (требуют токен + роль admin)
 	admin := r.PathPrefix("/api/admin").Subrouter()
 	admin.Use(middleware.AuthMiddleware(cfg.JWTSecret, userRepo))

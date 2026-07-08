@@ -217,3 +217,21 @@ func (s *UserService) ChangePassword(ctx context.Context, userID, currentPasswor
 
 	return s.repo.UpdatePassword(ctx, userID, string(hashed))
 }
+
+// ── Избранное ──
+
+func (s *UserService) GetFavorites(ctx context.Context, userID string) ([]string, error) {
+	return s.repo.GetFavorites(ctx, userID)
+}
+
+func (s *UserService) AddFavorite(ctx context.Context, userID, productID string) error {
+	return s.repo.AddFavorite(ctx, userID, productID)
+}
+
+func (s *UserService) RemoveFavorite(ctx context.Context, userID, productID string) error {
+	return s.repo.RemoveFavorite(ctx, userID, productID)
+}
+
+func (s *UserService) MergeFavorites(ctx context.Context, userID string, ids []string) ([]string, error) {
+	return s.repo.MergeFavorites(ctx, userID, ids)
+}
