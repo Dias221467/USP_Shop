@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Heart } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -34,21 +34,39 @@ function isNew(p: Product): boolean {
 
 function CatalogContent() {
   const searchParams = useSearchParams();
-  const categoryParam = searchParams.get('category') || '';
+  const router = useRouter();
+
+  // URL — источник правды для всех фильтров: «назад» из товара
+  // возвращает на то же место, ссылкой можно делиться
+  const category = searchParams.get('category') || '';
+  const brand = searchParams.get('brand') || '';
+  const sort = searchParams.get('sort') || 'new';
+  const q = searchParams.get('q') || '';
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [brands, setBrands] = useState<string[]>([]);
-  const [category, setCategory] = useState(categoryParam);
-  const [brand, setBrand] = useState('');
-  const [sort, setSort] = useState('new');
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(q);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [favs, setFavs] = useState<string[]>([]);
+
+  // Обновление фильтров = обновление URL (null — убрать параметр)
+  const setParams = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    }
+    const qs = params.toString();
+    router.replace(qs ? `/catalog?${qs}` : '/catalog', { scroll: false });
+  };
+
+  const setCategory = (v: string) => setParams({ category: v || null, brand: null, page: null });
+  const setBrand = (v: string) => setParams({ brand: v || null, page: null });
+  const setSort = (v: string) => setParams({ sort: v === 'new' ? null : v, page: null });
 
   useEffect(() => {
     setFavs(getFavorites());
@@ -59,28 +77,23 @@ function CatalogContent() {
 
   // Список брендов зависит от выбранной категории
   useEffect(() => {
-    setBrand('');
     api.get(category ? `/api/products/brands?category=${category}` : '/api/products/brands')
       .then((res) => setBrands(res.data || []))
       .catch(() => setBrands([]));
   }, [category]);
 
+  // Поиск с задержкой: печатаем локально, в URL уходит после паузы
   useEffect(() => {
-    setCategory(categoryParam);
-    setBrand('');
-    setPage(1);
-  }, [categoryParam]);
-
-  // Поиск с задержкой, чтобы не слать запрос на каждую букву
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    const t = setTimeout(() => {
+      if (search.trim() !== q) setParams({ q: search.trim() || null, page: null });
+    }, 350);
     return () => clearTimeout(t);
   }, [search]);
 
-  // Смена фильтров — возврат на первую страницу
+  // «Назад»/«вперёд» браузера меняют q в URL — подтягиваем в поле ввода
   useEffect(() => {
-    setPage(1);
-  }, [category, brand, debouncedSearch, sort]);
+    setSearch(q);
+  }, [q]);
 
   // Основной запрос: все фильтры и пагинация на бэке
   useEffect(() => {
@@ -88,7 +101,7 @@ function CatalogContent() {
     const params = new URLSearchParams();
     if (category) params.set('category', category);
     if (brand) params.set('brand', brand);
-    if (debouncedSearch) params.set('search', debouncedSearch);
+    if (q) params.set('search', q);
     if (sort !== 'new') params.set('sort', sort);
     params.set('page', String(page));
     params.set('limit', String(PAGE_SIZE));
@@ -105,10 +118,10 @@ function CatalogContent() {
         setTotalPages(1);
       })
       .finally(() => setLoading(false));
-  }, [category, brand, debouncedSearch, sort, page]);
+  }, [category, brand, q, sort, page]);
 
   const goToPage = (p: number) => {
-    setPage(p);
+    setParams({ page: p > 1 ? String(p) : null });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

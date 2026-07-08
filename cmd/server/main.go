@@ -55,6 +55,28 @@ func main() {
 	importHandler := handlers.NewImportHandler(productRepo)
 	supportHandler := handlers.NewSupportHandler()
 
+	// Фоновая очистка: раз в сутки архивируем доставленные/отменённые заказы,
+	// у которых статус не менялся дольше ORDER_RETENTION_DAYS (по умолчанию 30 дней).
+	// Архивные заказы пропадают из списков, но остаются в базе для статистики.
+	go func() {
+		cleanup := func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			cutoff := time.Now().AddDate(0, 0, -cfg.OrderRetentionDays)
+			if n, err := orderRepo.ArchiveOldClosed(ctx, cutoff); err != nil {
+				logger.Log.Errorf("Order cleanup error: %v", err)
+			} else if n > 0 {
+				logger.Log.Infof("Order cleanup: archived %d old closed orders", n)
+			}
+		}
+		cleanup()
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			cleanup()
+		}
+	}()
+
 	r := mux.NewRouter()
 	r.Use(middleware.LoggingMiddleware)
 

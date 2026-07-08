@@ -74,6 +74,10 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [productSearch, setProductSearch] = useState('');
+  const [orderStatus, setOrderStatus] = useState('');
+  const [orderPage, setOrderPage] = useState(1);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersTotalPages, setOrdersTotalPages] = useState(1);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -104,18 +108,38 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [pRes, oRes, sRes] = await Promise.allSettled([
+      const [pRes, sRes] = await Promise.allSettled([
         api.get('/api/products'),
-        api.get('/api/admin/orders'),
         api.get('/api/admin/stats'),
       ]);
       setProducts(pRes.status === 'fulfilled' ? pRes.value.data?.items || [] : []);
-      setOrders(oRes.status === 'fulfilled' ? oRes.value.data || [] : []);
       setStats(sRes.status === 'fulfilled' ? sRes.value.data : null);
     } finally {
       setLoading(false);
     }
   };
+
+  // Заказы: фильтр по статусу и пагинация — на бэке
+  const ORDERS_PAGE_SIZE = 20;
+  const fetchOrders = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (orderStatus) params.set('status', orderStatus);
+      params.set('page', String(orderPage));
+      params.set('limit', String(ORDERS_PAGE_SIZE));
+      const res = await api.get(`/api/admin/orders?${params.toString()}`);
+      setOrders(res.data?.items || []);
+      setOrdersTotal(res.data?.total || 0);
+      setOrdersTotalPages(res.data?.total_pages || 1);
+    } catch {
+      setOrders([]);
+    }
+  };
+
+  useEffect(() => {
+    if (!authed) return;
+    fetchOrders();
+  }, [authed, orderStatus, orderPage]);
 
   // Поиск товаров через бэк (с задержкой, чтобы не слать запрос на каждую букву)
   const searchMounted = useRef(false);
@@ -287,7 +311,7 @@ export default function AdminPage() {
                 {label}
                 {key !== 'stats' && (
                   <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === key ? 'bg-white/20' : 'bg-black/10'}`}>
-                    {key === 'products' ? products.length : orders.length}
+                    {key === 'products' ? products.length : ordersTotal}
                   </span>
                 )}
               </button>
@@ -371,8 +395,33 @@ export default function AdminPage() {
           ) : tab === 'orders' ? (
             /* ── Заказы ── */
             <div className="flex flex-col gap-3">
+              {/* Фильтр по статусу */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                <button
+                  onClick={() => { setOrderStatus(''); setOrderPage(1); }}
+                  className={`px-4 py-1.5 rounded-full text-xs transition-all ${
+                    orderStatus === '' ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'
+                  }`}
+                >
+                  Все
+                </button>
+                {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                  <button
+                    key={v}
+                    onClick={() => { setOrderStatus(v); setOrderPage(1); }}
+                    className={`px-4 py-1.5 rounded-full text-xs transition-all ${
+                      orderStatus === v ? 'bg-black text-white' : 'bg-black/5 hover:bg-black/10'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+
               {orders.length === 0 && (
-                <div className="text-center py-20 text-black/30">Заказов пока нет</div>
+                <div className="text-center py-20 text-black/30">
+                  {orderStatus ? 'Нет заказов с этим статусом' : 'Заказов пока нет'}
+                </div>
               )}
               {orders.map((order) => (
                 <div key={order.id} className="bg-white rounded-2xl p-4 md:p-5 border border-black/5">
@@ -421,6 +470,29 @@ export default function AdminPage() {
                   )}
                 </div>
               ))}
+
+              {/* Пагинация заказов */}
+              {ordersTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => setOrderPage((p) => Math.max(1, p - 1))}
+                    disabled={orderPage === 1}
+                    className="px-4 py-2 rounded-full text-sm bg-black/5 hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    ←
+                  </button>
+                  <span className="text-sm text-black/50">
+                    Стр. {orderPage} из {ordersTotalPages}
+                  </span>
+                  <button
+                    onClick={() => setOrderPage((p) => Math.min(ordersTotalPages, p + 1))}
+                    disabled={orderPage === ordersTotalPages}
+                    className="px-4 py-2 rounded-full text-sm bg-black/5 hover:bg-black/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             /* ── Статистика ── */

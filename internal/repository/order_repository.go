@@ -45,6 +45,7 @@ func (r *OrderRepository) FindByUserID(ctx context.Context, userID string) ([]mo
 	if err != nil {
 		return nil, err
 	}
+	// Архивный фильтр здесь не нужен: покупатель всегда видит всю свою историю
 	opts := options.Find().SetSort(bson.M{"created_at": -1})
 	cursor, err := r.collection.Find(ctx, bson.M{"user_id": objID}, opts)
 	if err != nil {
@@ -59,19 +60,53 @@ func (r *OrderRepository) FindByUserID(ctx context.Context, userID string) ([]mo
 	return orders, nil
 }
 
-func (r *OrderRepository) FindAll(ctx context.Context) ([]models.Order, error) {
-	opts := options.Find().SetSort(bson.M{"created_at": -1})
-	cursor, err := r.collection.Find(ctx, bson.M{}, opts)
+func (r *OrderRepository) FindAll(ctx context.Context, status models.OrderStatus, page, limit int) ([]models.Order, int64, error) {
+	query := bson.M{"archived": bson.M{"$ne": true}}
+	if status != "" {
+		query["status"] = status
+	}
+
+	total, err := r.collection.CountDocuments(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	opts := options.Find().SetSort(bson.M{"created_at": -1})
+	if limit > 0 {
+		if page < 1 {
+			page = 1
+		}
+		opts.SetSkip(int64((page - 1) * limit)).SetLimit(int64(limit))
+	}
+
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
 
 	var orders []models.Order
 	if err := cursor.All(ctx, &orders); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return orders, nil
+	return orders, total, nil
+}
+
+// ArchiveOldClosed архивирует доставленные и отменённые заказы,
+// у которых статус не менялся дольше указанной даты. Заказы остаются
+// в базе (статистика продолжает их учитывать), но пропадают из списков.
+func (r *OrderRepository) ArchiveOldClosed(ctx context.Context, olderThan time.Time) (int64, error) {
+	res, err := r.collection.UpdateMany(ctx, bson.M{
+		"status":     bson.M{"$in": []models.OrderStatus{models.OrderStatusDelivered, models.OrderStatusCancelled}},
+		"updated_at": bson.M{"$lt": olderThan},
+		"archived":   bson.M{"$ne": true},
+	}, bson.M{
+		"$set": bson.M{"archived": true},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return res.ModifiedCount, nil
 }
 
 // Stats считает статистику для админки агрегациями MongoDB

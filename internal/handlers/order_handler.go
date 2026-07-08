@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/Dias221467/USPShop/internal/models"
 	"github.com/Dias221467/USPShop/internal/services"
@@ -72,14 +73,18 @@ func (h *OrderHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, order)
 }
 
-// GET /api/admin/orders
+// GET /api/admin/orders?status=pending&page=1&limit=20
 func (h *OrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	orders, err := h.service.GetAllOrders(r.Context())
+	q := r.URL.Query()
+	page, _ := strconv.Atoi(q.Get("page"))
+	limit, _ := strconv.Atoi(q.Get("limit"))
+
+	list, err := h.service.GetAllOrders(r.Context(), models.OrderStatus(q.Get("status")), page, limit)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, orders)
+	respondJSON(w, http.StatusOK, list)
 }
 
 // GET /api/admin/stats

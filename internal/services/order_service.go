@@ -228,8 +228,25 @@ func (s *OrderService) GetMyOrders(ctx context.Context, userID string) ([]models
 	return s.orderRepo.FindByUserID(ctx, userID)
 }
 
-func (s *OrderService) GetAllOrders(ctx context.Context) ([]models.Order, error) {
-	return s.orderRepo.FindAll(ctx)
+func (s *OrderService) GetAllOrders(ctx context.Context, status models.OrderStatus, page, limit int) (*models.OrderList, error) {
+	orders, total, err := s.orderRepo.FindAll(ctx, status, page, limit)
+	if err != nil {
+		return nil, err
+	}
+	if orders == nil {
+		orders = []models.Order{}
+	}
+	if page < 1 {
+		page = 1
+	}
+	totalPages := 1
+	if limit > 0 {
+		totalPages = int((total + int64(limit) - 1) / int64(limit))
+		if totalPages < 1 {
+			totalPages = 1
+		}
+	}
+	return &models.OrderList{Items: orders, Total: total, Page: page, TotalPages: totalPages}, nil
 }
 
 func (s *OrderService) GetStats(ctx context.Context) (*models.AdminStats, error) {

@@ -44,6 +44,7 @@ type Order struct {
 	Status          OrderStatus        `bson:"status" json:"status"`
 	ShippingAddress ShippingAddress    `bson:"shipping_address" json:"shipping_address"`
 	PaymentMethod   string             `bson:"payment_method" json:"payment_method"`
+	Archived        bool               `bson:"archived,omitempty" json:"archived,omitempty"`
 	CreatedAt       time.Time          `bson:"created_at" json:"created_at"`
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at"`
 }
@@ -65,6 +66,13 @@ type CreateOrderRequest struct {
 
 type UpdateOrderStatusRequest struct {
 	Status OrderStatus `json:"status"`
+}
+
+type OrderList struct {
+	Items      []Order `json:"items"`
+	Total      int64   `json:"total"`
+	Page       int     `json:"page"`
+	TotalPages int     `json:"total_pages"`
 }
 
 type PeriodStats struct {
