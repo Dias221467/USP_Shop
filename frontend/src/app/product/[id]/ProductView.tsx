@@ -124,9 +124,9 @@ export function ProductView({ id }: { id: string }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
             {/* Изображения */}
-            <div className="flex gap-4">
+            <div className="flex flex-col-reverse gap-4 lg:flex-row">
               {images.length > 1 && (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-row gap-3 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
                   {images.map((img, i) => (
                     <button
                       key={i}
@@ -205,7 +205,7 @@ export function ProductView({ id }: { id: string }) {
                 {product.colors?.length > 0 && (
                   <div className="mb-8">
                     <p className="text-xs  uppercase tracking-widest mb-3">Цвет — {selectedColor}</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {product.colors.map((color, i) => (
                         <button
                           key={color}

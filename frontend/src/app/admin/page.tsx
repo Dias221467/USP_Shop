@@ -300,24 +300,26 @@ export default function AdminPage() {
           </div>
 
           {/* Табы */}
-          <div className="flex gap-1 p-1 bg-black/5 rounded-xl mb-8 w-fit">
-            {([['products', 'Товары', Package], ['orders', 'Заказы', ShoppingBag], ['stats', 'Статистика', BarChart3]] as const).map(([key, label, Icon]) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all ${
-                  tab === key ? 'bg-black text-white' : 'hover:bg-black/5'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {label}
-                {key !== 'stats' && (
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === key ? 'bg-white/20' : 'bg-black/10'}`}>
-                    {key === 'products' ? products.length : ordersTotal}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="overflow-x-auto mb-8 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="flex gap-1 p-1 bg-black/5 rounded-xl w-fit">
+              {([['products', 'Товары', Package], ['orders', 'Заказы', ShoppingBag], ['stats', 'Статистика', BarChart3]] as const).map(([key, label, Icon]) => (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm transition-all whitespace-nowrap ${
+                    tab === key ? 'bg-black text-white' : 'hover:bg-black/5'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                  {key !== 'stats' && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${tab === key ? 'bg-white/20' : 'bg-black/10'}`}>
+                      {key === 'products' ? products.length : ordersTotal}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? (
@@ -585,7 +587,7 @@ export default function AdminPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.25 }}
-              className="bg-white rounded-3xl p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto"
+              className="bg-white rounded-3xl p-5 md:p-8 w-full max-w-xl max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-light">

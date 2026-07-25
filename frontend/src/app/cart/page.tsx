@@ -83,7 +83,7 @@ export default function CartPage() {
                       transition={{ duration: 0.3 }}
                       className="flex gap-5 p-4 rounded-2xl bg-black/[0.02] hover:bg-black/[0.04] transition-colors"
                     >
-                      <Link href={`/product/${item.product_id}`} className="w-28 h-28 rounded-xl bg-[#f0f0f0] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <Link href={`/product/${item.product_id}`} className="w-20 h-20 md:w-28 md:h-28 rounded-xl bg-[#f0f0f0] flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-contain p-2" />
                         ) : (
@@ -101,7 +101,7 @@ export default function CartPage() {
                           {item.color}
                         </p>
 
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-3">
                             <button
                               onClick={() => updateQty(item, -1)}

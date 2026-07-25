@@ -36,7 +36,7 @@ export function FeaturedSection() {
                 Наша обувь создана для тех, кто ценит минимализм и качество.
                 Каждая деталь продумана до мелочей.
               </p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Link
                     href="/catalog?category=shoes"
