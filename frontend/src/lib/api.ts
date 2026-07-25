@@ -15,7 +15,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // На logout кидаем только если 401 пришёл на запрос С токеном —
+    // значит сессия протухла/невалидна. Если токена не было (например,
+    // это просто неверный пароль на /api/auth/login), это не разлогин,
+    // а обычная ошибка — пусть её обработает сам вызывающий код.
+    const hadToken = !!error.config?.headers?.Authorization;
+    if (error.response?.status === 401 && hadToken) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
