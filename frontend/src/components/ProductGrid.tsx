@@ -8,25 +8,22 @@ import { Product } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-const MOCK: Product[] = [
-  { id: 'm1', name: 'Nike SB Dunk Low', brand: 'Nike', price: 89000, category: 'shoes', images: ['/sneakers/nike-sb-dunk-black.jpg'], sizes: ['41','42','43'], colors: ['Black'], stock: 5, description: '', is_active: true },
-  { id: 'm2', name: 'Adidas Samba OG', brand: 'Adidas', price: 79000, category: 'shoes', images: ['/sneakers/adidas-samba-white.jpg'], sizes: ['40','41','42'], colors: ['White'], stock: 8, description: '', is_active: true },
-  { id: 'm3', name: 'Air Jordan 1 Low', brand: 'Jordan', price: 95000, category: 'shoes', images: ['/sneakers/air-jordan-1-low-sage.jpg'], sizes: ['41','42','43'], colors: ['Sage'], stock: 3, description: '', is_active: true },
-  { id: 'm4', name: 'Nike P-6000', brand: 'Nike', price: 72000, category: 'shoes', images: ['/sneakers/nike-p6000-black.jpg'], sizes: ['42','43','44'], colors: ['Black'], stock: 6, description: '', is_active: true },
-  { id: 'm5', name: 'Adidas Samba OG', brand: 'Adidas', price: 79000, category: 'shoes', images: ['/sneakers/adidas-samba-black.jpg'], sizes: ['40','41','42'], colors: ['Black'], stock: 4, description: '', is_active: true },
-  { id: 'm6', name: 'New Balance 1906D', brand: 'New Balance', price: 85000, category: 'shoes', images: ['/sneakers/new-balance-1906d.jpg'], sizes: ['41','42','43'], colors: ['Grey'], stock: 2, description: '', is_active: true },
-];
-
 export function ProductGrid() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    api.get('/api/products?limit=6').then((res) => {
-      const data = res.data?.items || [];
-      setProducts(data.length > 0 ? data : MOCK);
-    }).catch(() => setProducts(MOCK));
+    api.get('/api/products?limit=6')
+      .then((res) => setProducts(res.data?.items || []))
+      .catch(() => setProducts([]))
+      .finally(() => setLoaded(true));
   }, []);
+
+  // Пока не загрузилось или каталог пуст/недоступен — не показываем
+  // выдуманные товары (были случаи, когда сбой API маскировался мок-данными
+  // с несуществующими id, и раздел выглядел рабочим, хотя не был).
+  if (loaded && products.length === 0) return null;
 
   return (
     <section className="py-20 md:py-32 px-6 md:px-8 bg-white">

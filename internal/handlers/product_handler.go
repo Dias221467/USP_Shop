@@ -43,6 +43,9 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	if v := q.Get("limit"); v != "" {
 		filter.Limit, _ = strconv.Atoi(v)
 	}
+	if filter.Limit > 100 {
+		filter.Limit = 100
+	}
 
 	list, err := h.service.GetAll(r.Context(), filter)
 	if err != nil {

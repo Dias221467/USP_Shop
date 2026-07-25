@@ -79,6 +79,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(middleware.LoggingMiddleware)
+	r.Use(middleware.MaxBodyBytes(5 << 20)) // 5MB — с запасом хватает и на загрузку фото
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

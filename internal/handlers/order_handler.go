@@ -78,6 +78,9 @@ func (h *OrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, _ := strconv.Atoi(q.Get("page"))
 	limit, _ := strconv.Atoi(q.Get("limit"))
+	if limit > 100 {
+		limit = 100
+	}
 
 	list, err := h.service.GetAllOrders(r.Context(), models.OrderStatus(q.Get("status")), page, limit, q.Get("archived") == "true")
 	if err != nil {
