@@ -85,13 +85,18 @@ func main() {
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods("GET")
 
+	// Rate limiting на чувствительные auth-эндпоинты — защита от перебора
+	// пароля и от спама письмами (verification/reset шлют email через Resend)
+	loginLimiter := middleware.NewRateLimiter(10, 5*time.Minute)
+	emailActionLimiter := middleware.NewRateLimiter(5, time.Hour)
+
 	// Auth routes
 	auth := r.PathPrefix("/api/auth").Subrouter()
-	auth.HandleFunc("/register", userHandler.Register).Methods("POST")
-	auth.HandleFunc("/login", userHandler.Login).Methods("POST")
+	auth.Handle("/register", emailActionLimiter.Middleware(http.HandlerFunc(userHandler.Register))).Methods("POST")
+	auth.Handle("/login", loginLimiter.Middleware(http.HandlerFunc(userHandler.Login))).Methods("POST")
 	auth.HandleFunc("/verify-email", userHandler.VerifyEmail).Methods("GET")
-	auth.HandleFunc("/resend-verification", userHandler.ResendVerification).Methods("POST")
-	auth.HandleFunc("/forgot-password", userHandler.ForgotPassword).Methods("POST")
+	auth.Handle("/resend-verification", emailActionLimiter.Middleware(http.HandlerFunc(userHandler.ResendVerification))).Methods("POST")
+	auth.Handle("/forgot-password", emailActionLimiter.Middleware(http.HandlerFunc(userHandler.ForgotPassword))).Methods("POST")
 	auth.HandleFunc("/reset-password", userHandler.ResetPassword).Methods("POST")
 
 	// Public product routes (brands раньше {id}, чтобы не перехватывался)
@@ -144,7 +149,7 @@ func main() {
 	admin.HandleFunc("/import/apply", importHandler.Apply).Methods("POST")
 
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
+		AllowedOrigins: cfg.AllowedOrigins,
 		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders: []string{"Authorization", "Content-Type"},
 	})

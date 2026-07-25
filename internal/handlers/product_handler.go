@@ -46,7 +46,7 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.service.GetAll(r.Context(), filter)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, list)
@@ -56,7 +56,7 @@ func (h *ProductHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) GetBrands(w http.ResponseWriter, r *http.Request) {
 	brands, err := h.service.GetBrands(r.Context(), models.Category(r.URL.Query().Get("category")))
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, brands)
@@ -125,7 +125,7 @@ func (h *ProductHandler) Patch(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	if err := h.service.Delete(r.Context(), id); err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Product deleted"})

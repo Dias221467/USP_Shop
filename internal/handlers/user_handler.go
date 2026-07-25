@@ -7,6 +7,7 @@ import (
 	"github.com/Dias221467/USPShop/internal/models"
 	"github.com/Dias221467/USPShop/internal/services"
 	jwtutil "github.com/Dias221467/USPShop/pkg/jwt"
+	"github.com/Dias221467/USPShop/pkg/logger"
 	"github.com/Dias221467/USPShop/pkg/middleware"
 )
 
@@ -152,4 +153,11 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 
 func respondError(w http.ResponseWriter, status int, message string) {
 	respondJSON(w, status, map[string]string{"error": message})
+}
+
+// respondInternalError логирует настоящую ошибку на сервере, но клиенту
+// отдаёт нейтральное сообщение — детали БД/драйвера наружу не текут.
+func respondInternalError(w http.ResponseWriter, err error) {
+	logger.Log.Errorf("internal server error: %v", err)
+	respondError(w, http.StatusInternalServerError, "Внутренняя ошибка сервера")
 }

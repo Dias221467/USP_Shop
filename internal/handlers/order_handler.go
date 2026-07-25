@@ -42,7 +42,7 @@ func (h *OrderHandler) GetMyOrders(w http.ResponseWriter, r *http.Request) {
 	claims := getClaims(r)
 	orders, err := h.service.GetMyOrders(r.Context(), claims.UserID)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, orders)
@@ -81,7 +81,7 @@ func (h *OrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.service.GetAllOrders(r.Context(), models.OrderStatus(q.Get("status")), page, limit, q.Get("archived") == "true")
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, list)
@@ -91,7 +91,7 @@ func (h *OrderHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 func (h *OrderHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.service.GetStats(r.Context())
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, stats)

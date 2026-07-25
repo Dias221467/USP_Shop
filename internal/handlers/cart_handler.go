@@ -24,7 +24,7 @@ func (h *CartHandler) GetCart(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r)
 	cart, err := h.service.GetCart(r.Context(), userID)
 	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, cart)
@@ -82,7 +82,7 @@ func (h *CartHandler) RemoveItem(w http.ResponseWriter, r *http.Request) {
 func (h *CartHandler) ClearCart(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r)
 	if err := h.service.ClearCart(r.Context(), userID); err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		respondInternalError(w, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"message": "Cart cleared"})

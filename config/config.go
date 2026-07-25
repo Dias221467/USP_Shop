@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -22,6 +23,7 @@ type Config struct {
 	TelegramBotToken       string
 	TelegramChatID         string
 	OrderRetentionDays     int
+	AllowedOrigins         []string
 }
 
 func Load() *Config {
@@ -29,10 +31,15 @@ func Load() *Config {
 		log.Println("No .env file found, using environment variables")
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" || jwtSecret == "secret" {
+		log.Fatal("JWT_SECRET is not set (or is the insecure default) — refusing to start. Set a real secret in the environment.")
+	}
+
 	return &Config{
 		MongoURI:            getEnv("MONGO_URI", "mongodb://localhost:27017"),
 		DBName:              getEnv("DB_NAME", "uspshop"),
-		JWTSecret:           getEnv("JWT_SECRET", "secret"),
+		JWTSecret:           jwtSecret,
 		Port:                getEnv("PORT", "8080"),
 		SMTPUser:            getEnv("SMTP_USER", ""),
 		ResendAPIKey:        getEnv("RESEND_API_KEY", ""),
@@ -43,6 +50,7 @@ func Load() *Config {
 		TelegramBotToken:    getEnv("TELEGRAM_BOT_TOKEN", ""),
 		TelegramChatID:      getEnv("TELEGRAM_CHAT_ID", ""),
 		OrderRetentionDays:  getEnvInt("ORDER_RETENTION_DAYS", 30),
+		AllowedOrigins:      getEnvList("ALLOWED_ORIGINS", []string{"http://localhost:3000"}),
 	}
 }
 
@@ -51,6 +59,25 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+// getEnvList читает список через запятую, например "https://a.com,https://b.com"
+func getEnvList(key string, fallback []string) []string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	var list []string
+	for _, item := range strings.Split(value, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			list = append(list, item)
+		}
+	}
+	if len(list) == 0 {
+		return fallback
+	}
+	return list
 }
 
 func getEnvInt(key string, fallback int) int {
