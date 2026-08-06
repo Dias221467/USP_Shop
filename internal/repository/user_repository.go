@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
+	"github.com/Dias221467/USPShop/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +17,25 @@ type UserRepository struct {
 }
 
 func NewUserRepository(db *mongo.Database) *UserRepository {
-	return &UserRepository{collection: db.Collection("users")}
+	r := &UserRepository{collection: db.Collection("users")}
+
+	// Уникальный индекс на email закрывает гонку: без него два запроса на
+	// регистрацию с одним email, пришедшие одновременно, оба проходят проверку
+	// "такого email ещё нет" и создают два аккаунта — та же гонка, что была
+	// с остатками товара. Индекс не критичен для запуска — если создание не
+	// удалось (например, в базе уже есть дубликаты), просто логируем и
+	// продолжаем работу, не роняя сервер.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	_, err := r.collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "email", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		logger.Log.Errorf("Failed to create unique index on users.email: %v", err)
+	}
+
+	return r
 }
 
 func (r *UserRepository) Create(ctx context.Context, user *models.User) error {

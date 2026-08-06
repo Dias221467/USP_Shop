@@ -83,7 +83,14 @@ func main() {
 	r.Use(middleware.MaxBodyBytes(5 << 20)) // 5MB — с запасом хватает и на загрузку фото
 
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
 		w.Header().Set("Content-Type", "application/json")
+		if err := mongoClient.Ping(ctx, nil); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			w.Write([]byte(`{"status":"error","db":"unreachable"}`))
+			return
+		}
 		w.Write([]byte(`{"status":"ok"}`))
 	}).Methods("GET")
 
@@ -105,9 +112,6 @@ func main() {
 	r.HandleFunc("/api/products", productHandler.GetAll).Methods("GET")
 	r.HandleFunc("/api/products/brands", productHandler.GetBrands).Methods("GET")
 	r.HandleFunc("/api/products/{id}", productHandler.GetByID).Methods("GET")
-
-	// Static files (uploaded images)
-	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
 	// Protected routes (требуют токен)
 	api := r.PathPrefix("/api").Subrouter()

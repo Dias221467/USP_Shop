@@ -66,6 +66,12 @@ func (s *UserService) Register(ctx context.Context, req models.RegisterRequest) 
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			// Двое зарегистрировались с одним email одновременно — первую
+			// проверку выше оба прошли, но уникальный индекс в базе поймал
+			// гонку. Не отдаём клиенту сырую ошибку драйвера.
+			return nil, errors.New("email already registered")
+		}
 		return nil, err
 	}
 
