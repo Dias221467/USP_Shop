@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html"
 	"strings"
 
 	"github.com/Dias221467/USPShop/internal/models"
@@ -168,26 +169,32 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 	return order, nil
 }
 
+// notifyNewOrder собирает сообщение с parse_mode: HTML. Все поля, которые
+// пришли от покупателя (имя, адрес, комментарий), обязательно экранируем —
+// иначе покупатель может вписать в комментарий к заказу свою HTML-ссылку,
+// и она превратится в кликабельную ссылку прямо в сообщении владельцу.
 func (s *OrderService) notifyNewOrder(order *models.Order) {
+	e := html.EscapeString
+
 	var b strings.Builder
 	fmt.Fprintf(&b, "🛍 <b>Новый заказ — ₸%.0f</b>\n\n", order.Total)
 
 	for _, it := range order.Items {
-		details := it.Size
+		details := e(it.Size)
 		if it.Color != "" {
-			details = it.Color + " · " + it.Size
+			details = e(it.Color) + " · " + e(it.Size)
 		}
-		fmt.Fprintf(&b, "• %s (%s) — %d шт. · ₸%.0f\n", it.Name, details, it.Quantity, it.Subtotal)
+		fmt.Fprintf(&b, "• %s (%s) — %d шт. · ₸%.0f\n", e(it.Name), details, it.Quantity, it.Subtotal)
 	}
 
 	addr := order.ShippingAddress
-	fmt.Fprintf(&b, "\n👤 %s\n📞 %s\n📍 %s, %s %s", order.CustomerName, order.CustomerPhone, addr.City, addr.Street, addr.House)
+	fmt.Fprintf(&b, "\n👤 %s\n📞 %s\n📍 %s, %s %s", e(order.CustomerName), e(order.CustomerPhone), e(addr.City), e(addr.Street), e(addr.House))
 	if addr.Flat != "" {
-		fmt.Fprintf(&b, ", кв. %s", addr.Flat)
+		fmt.Fprintf(&b, ", кв. %s", e(addr.Flat))
 	}
-	fmt.Fprintf(&b, "\n💳 %s", order.PaymentMethod)
+	fmt.Fprintf(&b, "\n💳 %s", e(order.PaymentMethod))
 	if addr.Comment != "" {
-		fmt.Fprintf(&b, "\n💬 %s", addr.Comment)
+		fmt.Fprintf(&b, "\n💬 %s", e(addr.Comment))
 	}
 
 	_ = s.notifier.Send(b.String())

@@ -31,6 +31,10 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "Name, email and password are required")
 		return
 	}
+	if len(req.Password) < 6 {
+		respondError(w, http.StatusBadRequest, "Password must be at least 6 characters")
+		return
+	}
 	resp, err := h.service.Register(r.Context(), req)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
