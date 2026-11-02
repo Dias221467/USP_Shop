@@ -1,43 +1,45 @@
+English | [Русский](README.ru.md)
+
 # USP Shop
 
-Интернет-магазин обуви и одежды для физического магазина в Семее, Казахстан. Каталог, корзина, оформление заказов, личный кабинет и админ-панель для управления товарами и заказами.
+An online store for a physical shoe and clothing shop in Semey, Kazakhstan. Catalog, cart, checkout, account area, and an admin panel for managing products and orders.
 
-## Стек
+## Stack
 
-**Бэкенд** — Go, [gorilla/mux](https://github.com/gorilla/mux), MongoDB, JWT, bcrypt, logrus.
-**Фронтенд** — Next.js (App Router), React, TypeScript, Tailwind CSS, Framer Motion.
-**Внешние сервисы** — MongoDB Atlas (база), Cloudinary (фото товаров), Resend (письма), Telegram Bot API (уведомления о заказах).
+**Backend** — Go, [gorilla/mux](https://github.com/gorilla/mux), MongoDB, JWT, bcrypt, logrus.
+**Frontend** — Next.js (App Router), React, TypeScript, Tailwind CSS, Framer Motion.
+**External services** — MongoDB Atlas (database), Cloudinary (product photos), Resend (emails), Telegram Bot API (order notifications).
 
-## Структура проекта
+## Project structure
 
 ```
-cmd/server/        точка входа бэкенда
-config/             загрузка конфига, подключение к MongoDB
+cmd/server/         backend entry point
+config/              config loading, MongoDB connection
 internal/
-  models/           структуры данных
-  repository/       слой работы с MongoDB
-  services/         бизнес-логика
-  handlers/         HTTP-хендлеры
+  models/            data structures
+  repository/        MongoDB data access layer
+  services/          business logic
+  handlers/          HTTP handlers
 pkg/
-  email/            отправка писем через Resend
-  telegram/         уведомления о заказах
-  jwt/               генерация и проверка токенов
-  middleware/       авторизация, rate limiting, CORS, логирование
-  upload/            загрузка изображений в Cloudinary
-  logger/            логирование
-frontend/           Next.js приложение
+  email/             sending emails via Resend
+  telegram/          order notifications
+  jwt/                token generation and validation
+  middleware/        auth, rate limiting, CORS, logging
+  upload/             image uploads to Cloudinary
+  logger/             logging
+frontend/            Next.js application
 ```
 
-## Запуск локально
+## Running locally
 
-### Бэкенд
+### Backend
 
-Нужен файл `.env` в корне проекта со следующими переменными:
+Create a `.env` file in the project root with the following variables:
 
 ```
 MONGO_URI=mongodb+srv://...
 DB_NAME=uspshop
-JWT_SECRET=любая-случайная-строка
+JWT_SECRET=any-random-string
 PORT=8080
 APP_URL=http://localhost:3000
 
@@ -55,13 +57,13 @@ ORDER_RETENTION_DAYS=30
 ALLOWED_ORIGINS=http://localhost:3000
 ```
 
-`JWT_SECRET` обязателен — сервер откажется стартовать без него (или если он равен `secret`). `MONGO_URI` должен указывать на реплика-сет (MongoDB Atlas подходит на любом тарифе) — используются транзакции при оформлении заказа.
+`JWT_SECRET` is required — the server refuses to start without it (or if it's set to `secret`). `MONGO_URI` must point at a replica set (any MongoDB Atlas tier works) since order creation uses transactions.
 
 ```bash
 go run cmd/server/main.go
 ```
 
-### Фронтенд
+### Frontend
 
 ```bash
 cd frontend
@@ -69,20 +71,20 @@ npm install
 npm run dev
 ```
 
-Адрес бэкенда для фронтенда задаётся в `frontend/.env.local`:
+The backend URL for the frontend is set in `frontend/.env.local`:
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8080
 ```
 
-## Тесты
+## Tests
 
 ```bash
 go test ./...
 ```
 
-Юнит-тесты покрывают критичную бизнес-логику: проверку остатков, расчёт корзины, сортировку размеров, выдачу и проверку JWT-токенов.
+Unit tests cover the highest-risk business logic: stock checks, cart calculations, size sorting, and JWT token issuance/validation.
 
-## Деплой
+## Deployment
 
-Бэкенд и фронтенд разворачиваются как два отдельных сервиса на [Railway](https://railway.app) с автодеплоем из GitHub.
+Backend and frontend are deployed as two separate services on [Railway](https://railway.app), with automatic deploys from GitHub.
