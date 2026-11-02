@@ -44,7 +44,7 @@ func main() {
 	userService := services.NewUserService(userRepo, cfg.JWTSecret, mailer, cfg.AppURL)
 	productService := services.NewProductService(productRepo)
 	cartService := services.NewCartService(cartRepo, productRepo)
-	orderService := services.NewOrderService(orderRepo, cartRepo, userRepo, productRepo, notifier)
+	orderService := services.NewOrderService(orderRepo, cartRepo, userRepo, productRepo, notifier, mongoClient)
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userService)

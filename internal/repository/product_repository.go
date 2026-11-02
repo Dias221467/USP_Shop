@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
+	"github.com/Dias221467/USPShop/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,7 +22,20 @@ type ProductRepository struct {
 }
 
 func NewProductRepository(db *mongo.Database) *ProductRepository {
-	return &ProductRepository{collection: db.Collection("products")}
+	r := &ProductRepository{collection: db.Collection("products")}
+
+	// Каталог фильтрует практически всегда по is_active, часто вместе с
+	// category/brand — этот индекс покрывает и одиночный фильтр, и оба вместе.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	_, err := r.collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "is_active", Value: 1}, {Key: "category", Value: 1}, {Key: "brand", Value: 1}},
+	})
+	if err != nil {
+		logger.Log.Errorf("Failed to create index on products: %v", err)
+	}
+
+	return r
 }
 
 func (r *ProductRepository) Create(ctx context.Context, p *models.Product) error {

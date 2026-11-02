@@ -20,10 +20,11 @@ type OrderService struct {
 	userRepo    *repository.UserRepository
 	productRepo *repository.ProductRepository
 	notifier    *telegram.Notifier
+	client      *mongo.Client
 }
 
-func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository, productRepo *repository.ProductRepository, notifier *telegram.Notifier) *OrderService {
-	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo, notifier: notifier}
+func NewOrderService(orderRepo *repository.OrderRepository, cartRepo *repository.CartRepository, userRepo *repository.UserRepository, productRepo *repository.ProductRepository, notifier *telegram.Notifier, client *mongo.Client) *OrderService {
+	return &OrderService{orderRepo: orderRepo, cartRepo: cartRepo, userRepo: userRepo, productRepo: productRepo, notifier: notifier, client: client}
 }
 
 // checkStock проверяет, хватает ли товара на складе для запрошенного количества
@@ -66,104 +67,116 @@ func (s *OrderService) CreateFromCart(ctx context.Context, userID string, req mo
 	}
 
 	userObjID, _ := primitive.ObjectIDFromHex(userID)
-	var items []models.OrderItem
-	var total float64
 
-	if len(req.Items) > 0 {
-		// Товары переданы напрямую из фронта (localStorage корзина).
-		// Цену и наличие берём из базы — данным клиента не доверяем.
-		for _, ri := range req.Items {
-			if ri.Quantity <= 0 {
-				return nil, errors.New("Некорректное количество товара")
-			}
-			product, err := s.productRepo.FindByID(ctx, ri.ProductID)
-			if err != nil {
-				return nil, fmt.Errorf("Товар «%s» больше недоступен", ri.Name)
-			}
-			if err := checkStock(product, ri.Color, ri.Size, ri.Quantity); err != nil {
-				return nil, err
-			}
-			subtotal := float64(ri.Quantity) * product.Price
-			items = append(items, models.OrderItem{
-				ProductID: product.ID,
-				Name:      product.Name,
-				Price:     product.Price,
-				Size:      ri.Size,
-				Color:     ri.Color,
-				Quantity:  ri.Quantity,
-				Subtotal:  subtotal,
-			})
-			total += subtotal
-		}
-	} else {
-		// Фолбэк: читаем из серверной корзины
-		cart, err := s.cartRepo.GetByUserID(ctx, userID)
-		if err != nil {
-			if err == mongo.ErrNoDocuments {
-				return nil, errors.New("cart is empty")
-			}
-			return nil, err
-		}
-		if len(cart.Items) == 0 {
-			return nil, errors.New("cart is empty")
-		}
-		for _, item := range cart.Items {
-			items = append(items, models.OrderItem{
-				ProductID: item.ProductID,
-				Name:      item.Name,
-				Price:     item.Price,
-				Size:      item.Size,
-				Color:     item.Color,
-				Quantity:  item.Quantity,
-				Subtotal:  item.Subtotal,
-			})
-		}
-		total = cart.Total
-		s.cartRepo.Clear(ctx, userID)
-	}
-
-	order := &models.Order{
-		UserID:          userObjID,
-		Items:           items,
-		Total:           total,
-		Status:          models.OrderStatusPending,
-		ShippingAddress: req.ShippingAddress,
-		PaymentMethod:   req.PaymentMethod,
-	}
-
-	if user, err := s.userRepo.GetByID(ctx, userID); err == nil {
-		order.CustomerName = user.Name
-		order.CustomerPhone = user.Phone
-	}
-
-	// Атомарно резервируем товар ДО создания заказа: если чего-то не хватило —
-	// возвращаем уже списанное и отклоняем заказ. Оверселл невозможен.
-	var reserved []models.OrderItem
-	rollback := func() {
-		for _, it := range reserved {
-			_ = s.productRepo.RestoreStock(ctx, it.ProductID.Hex(), it.Color, it.Size, it.Quantity)
-		}
-	}
-	for _, item := range items {
-		if err := s.productRepo.DecrementStock(ctx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity); err != nil {
-			rollback()
-			if errors.Is(err, repository.ErrInsufficientStock) {
-				return nil, fmt.Errorf("«%s» только что раскупили — обновите корзину", item.Name)
-			}
-			return nil, err
-		}
-		reserved = append(reserved, item)
-	}
-
-	if err := s.orderRepo.Create(ctx, order); err != nil {
-		rollback()
+	session, err := s.client.StartSession()
+	if err != nil {
 		return nil, err
 	}
+	defer session.EndSession(ctx)
 
-	// Заказ оформлен — серверная корзина больше не нужна
-	_ = s.cartRepo.Clear(ctx, userID)
+	// Списание остатков, создание заказа и очистка корзины — одна транзакция
+	// MongoDB. Раньше откат при сбое (например, падении процесса между
+	// списанием и созданием заказа) был кодом в памяти запроса и не пережил
+	// бы такой сбой — остаток тихо ушёл бы в минус без заказа. Теперь либо
+	// фиксируется всё целиком, либо не фиксируется ничего.
+	result, err := session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		var items []models.OrderItem
+		var total float64
 
-	// Уведомление в Telegram в фоне — заказ не ждёт отправку
+		if len(req.Items) > 0 {
+			// Товары переданы напрямую из фронта (localStorage корзина).
+			// Цену и наличие берём из базы — данным клиента не доверяем.
+			for _, ri := range req.Items {
+				if ri.Quantity <= 0 {
+					return nil, errors.New("Некорректное количество товара")
+				}
+				product, err := s.productRepo.FindByID(sessCtx, ri.ProductID)
+				if err != nil {
+					return nil, fmt.Errorf("Товар «%s» больше недоступен", ri.Name)
+				}
+				if err := checkStock(product, ri.Color, ri.Size, ri.Quantity); err != nil {
+					return nil, err
+				}
+				subtotal := float64(ri.Quantity) * product.Price
+				items = append(items, models.OrderItem{
+					ProductID: product.ID,
+					Name:      product.Name,
+					Price:     product.Price,
+					Size:      ri.Size,
+					Color:     ri.Color,
+					Quantity:  ri.Quantity,
+					Subtotal:  subtotal,
+				})
+				total += subtotal
+			}
+		} else {
+			// Фолбэк: читаем из серверной корзины
+			cart, err := s.cartRepo.GetByUserID(sessCtx, userID)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					return nil, errors.New("cart is empty")
+				}
+				return nil, err
+			}
+			if len(cart.Items) == 0 {
+				return nil, errors.New("cart is empty")
+			}
+			for _, item := range cart.Items {
+				items = append(items, models.OrderItem{
+					ProductID: item.ProductID,
+					Name:      item.Name,
+					Price:     item.Price,
+					Size:      item.Size,
+					Color:     item.Color,
+					Quantity:  item.Quantity,
+					Subtotal:  item.Subtotal,
+				})
+			}
+			total = cart.Total
+		}
+
+		order := &models.Order{
+			UserID:          userObjID,
+			Items:           items,
+			Total:           total,
+			Status:          models.OrderStatusPending,
+			ShippingAddress: req.ShippingAddress,
+			PaymentMethod:   req.PaymentMethod,
+		}
+
+		if user, err := s.userRepo.GetByID(sessCtx, userID); err == nil {
+			order.CustomerName = user.Name
+			order.CustomerPhone = user.Phone
+		}
+
+		// Атомарная проверка "хватает ли" внутри DecrementStock плюс сама
+		// транзакция закрывают гонку одновременных заказов полностью.
+		for _, item := range items {
+			if err := s.productRepo.DecrementStock(sessCtx, item.ProductID.Hex(), item.Color, item.Size, item.Quantity); err != nil {
+				if errors.Is(err, repository.ErrInsufficientStock) {
+					return nil, fmt.Errorf("«%s» только что раскупили — обновите корзину", item.Name)
+				}
+				return nil, err
+			}
+		}
+
+		if err := s.orderRepo.Create(sessCtx, order); err != nil {
+			return nil, err
+		}
+
+		// Заказ оформлен — серверная корзина больше не нужна. Если
+		// транзакция откатится, откатится и очистка корзины вместе с ней.
+		_ = s.cartRepo.Clear(sessCtx, userID)
+
+		return order, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	order := result.(*models.Order)
+
+	// Уведомление в Telegram — только после успешного коммита, в фоне
 	go s.notifyNewOrder(order)
 
 	return order, nil

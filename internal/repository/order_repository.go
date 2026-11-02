@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Dias221467/USPShop/internal/models"
+	"github.com/Dias221467/USPShop/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +17,21 @@ type OrderRepository struct {
 }
 
 func NewOrderRepository(db *mongo.Database) *OrderRepository {
-	return &OrderRepository{collection: db.Collection("orders")}
+	r := &OrderRepository{collection: db.Collection("orders")}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// История заказов конкретного пользователя: фильтр по user_id, сортировка по дате
+	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{Keys: bson.D{{Key: "user_id", Value: 1}, {Key: "created_at", Value: -1}}},
+		// Список в админке: архивные/статус/дата — в этом порядке
+		{Keys: bson.D{{Key: "archived", Value: 1}, {Key: "status", Value: 1}, {Key: "created_at", Value: -1}}},
+	})
+	if err != nil {
+		logger.Log.Errorf("Failed to create indexes on orders: %v", err)
+	}
+
+	return r
 }
 
 func (r *OrderRepository) Create(ctx context.Context, order *models.Order) error {
